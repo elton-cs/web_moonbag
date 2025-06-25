@@ -7,10 +7,11 @@ use bevy::{
 };
 use futures_lite::future;
 use std::sync::Arc;
+use torii_client::error::Error;
 
 /// Component to track the async connection task
 #[derive(Component)]
-pub struct ToriiConnectionTask(Task<Result<torii_client::Client, String>>);
+pub struct ToriiConnectionTask(Task<Result<torii_client::Client, Error>>);
 
 /// Initializes the Torii connection on startup.
 pub fn initialize_torii_connection(
@@ -57,8 +58,8 @@ pub fn check_connection_status(
                     info!("Torii connection established successfully");
                 }
                 Err(error) => {
-                    *connection_state = ToriiConnectionState::Failed(error.clone());
                     error!("Failed to connect to Torii: {}", error);
+                    *connection_state = ToriiConnectionState::Failed(error);
                 }
             }
         }

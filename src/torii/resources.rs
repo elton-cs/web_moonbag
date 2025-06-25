@@ -3,15 +3,16 @@
 use bevy::prelude::*;
 use std::sync::Arc;
 use torii_client::Client;
+use torii_client::error::Error;
 
 /// The current state of the Torii connection.
-#[derive(Resource, Default, Debug, Clone, PartialEq)]
+#[derive(Resource, Default, Debug)]
 pub enum ToriiConnectionState {
     #[default]
     Disconnected,
     Connecting,
     Connected,
-    Failed(String),
+    Failed(Error),
 }
 
 /// The active Torii client connection.
