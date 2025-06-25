@@ -11,10 +11,12 @@ mod dev_tools;
 mod menus;
 mod screens;
 mod theme;
+mod torii;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 fn main() -> AppExit {
+    wasm_bindgen_futures::spawn_local(torii::run());
     App::new().add_plugins(AppPlugin).run()
 }
 
