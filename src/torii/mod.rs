@@ -1,12 +1,29 @@
 mod client;
-
+mod resources;
+mod systems;
 use bevy::prelude::*;
+pub use resources::*;
 
-pub fn plugin(app: &mut App) {
-    app.add_systems(Startup, startup_torii);
+pub struct ToriiPlugin;
+
+impl Plugin for ToriiPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            // Register resources
+            .init_resource::<ToriiConnectionState>()
+            // Add systems
+            .add_systems(Startup, systems::initialize_torii_connection)
+            .add_systems(
+                Update,
+                (
+                    systems::check_connection_status,
+                    systems::sync_entities.run_if(resource_exists::<ToriiClient>),
+                ),
+            );
+    }
 }
 
-fn startup_torii() {
-    wasm_bindgen_futures::spawn_local(client::connect_torii());
-    info!("Torii client only runs on WASM target");
+// Legacy plugin function for backward compatibility
+pub fn plugin(app: &mut App) {
+    app.add_plugins(ToriiPlugin);
 }

@@ -1,16 +1,27 @@
+use crate::torii::ToriiConfig;
+use bevy::prelude::*;
 use starknet::core::types::Felt;
 use torii_client::Client;
-use web_sys::console;
 
-pub async fn connect_torii() {
-    let torii_url = "https://api.cartridge.gg/x/moonbagvibes/torii";
-    let world_address = "0x04d9778a74d2c9e6e7e4a24cbe913998a80de217c66ee173a604d06dea5469c3";
-    let world_felt = Felt::from_hex_unchecked(world_address);
+pub async fn create_client(config: ToriiConfig) -> Result<Client, String> {
+    let world_felt = Felt::from_hex_unchecked(&config.world_address);
 
-    let client = Client::new(torii_url.to_string(), world_felt)
-        .await
-        .unwrap();
-    let word_addr = client.metadata().await.unwrap().world_address;
+    match Client::new(config.url, world_felt).await {
+        Ok(client) => {
+            let metadata = client
+                .metadata()
+                .await
+                .map_err(|e| format!("Failed to get metadata: {}", e))?;
 
-    console::log_1(&format!("World address: {}", word_addr).into());
+            info!(
+                "Connected to Torii world at address: {}",
+                metadata.world_address
+            );
+            Ok(client)
+        }
+        Err(e) => {
+            error!("Failed to create Torii client: {}", e);
+            Err(format!("Failed to create Torii client: {}", e))
+        }
+    }
 }

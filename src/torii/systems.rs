@@ -1,40 +1,33 @@
 //! Systems for managing the Torii connection and syncing entities.
 
 use crate::torii::{ToriiClient, ToriiConfig, ToriiConnectionState, client};
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    tasks::{AsyncComputeTaskPool, Task, block_on},
+};
+use futures_lite::future;
 use std::sync::Arc;
 
+/// Component to track the async connection task
+#[derive(Component)]
+pub struct ToriiConnectionTask(Task<Result<torii_client::Client, String>>);
+
 /// Initializes the Torii connection on startup.
-pub fn initialize_torii_connection(mut connection_state: ResMut<ToriiConnectionState>) {
+pub fn initialize_torii_connection(
+    mut commands: Commands,
+    mut connection_state: ResMut<ToriiConnectionState>,
+) {
     info!("Initializing Torii connection...");
     *connection_state = ToriiConnectionState::Connecting;
 
     let config = ToriiConfig::default();
+    let task_pool = AsyncComputeTaskPool::get();
 
-    // Spawn the async connection task
-    wasm_bindgen_futures::spawn_local(async move {
-        match client::create_client(config).await {
-            Ok(client) => {
-                // Store the client in a thread-local for later retrieval
-                // This is a workaround for the async/sync boundary in WASM
-                PENDING_CLIENT.with(|cell| {
-                    *cell.borrow_mut() = Some(Arc::new(client));
-                });
-            }
-            Err(e) => {
-                error!("Failed to connect to Torii: {}", e);
-                PENDING_ERROR.with(|cell| {
-                    *cell.borrow_mut() = Some(e);
-                });
-            }
-        }
-    });
-}
+    // Spawn the async connection task using Bevy's task pool
+    let task = task_pool.spawn(async move { client::create_client(config).await });
 
-// Thread-local storage for passing the client from async to sync context
-thread_local! {
-    static PENDING_CLIENT: std::cell::RefCell<Option<Arc<torii_client::Client>>> = std::cell::RefCell::new(None);
-    static PENDING_ERROR: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
+    // Spawn an entity with the task component to track progress
+    commands.spawn(ToriiConnectionTask(task));
 }
 
 /// Checks the connection status and updates resources accordingly.
@@ -42,28 +35,34 @@ pub fn check_connection_status(
     mut commands: Commands,
     mut connection_state: ResMut<ToriiConnectionState>,
     current_client: Option<Res<ToriiClient>>,
+    mut task_query: Query<(Entity, &mut ToriiConnectionTask)>,
 ) {
     // Skip if already connected
     if current_client.is_some() {
         return;
     }
 
-    // Check for pending client
-    PENDING_CLIENT.with(|cell| {
-        if let Some(client) = cell.borrow_mut().take() {
-            commands.insert_resource(ToriiClient { client });
-            *connection_state = ToriiConnectionState::Connected;
-            info!("Torii connection established successfully");
-        }
-    });
+    // Check if any connection tasks are complete
+    for (entity, mut task) in &mut task_query {
+        if let Some(result) = block_on(future::poll_once(&mut task.0)) {
+            // Task is complete, remove the entity
+            commands.entity(entity).despawn();
 
-    // Check for pending error
-    PENDING_ERROR.with(|cell| {
-        if let Some(error) = cell.borrow_mut().take() {
-            *connection_state = ToriiConnectionState::Failed(error.clone());
-            error!("Failed to connect to Torii: {}", error);
+            match result {
+                Ok(client) => {
+                    commands.insert_resource(ToriiClient {
+                        client: Arc::new(client),
+                    });
+                    *connection_state = ToriiConnectionState::Connected;
+                    info!("Torii connection established successfully");
+                }
+                Err(error) => {
+                    *connection_state = ToriiConnectionState::Failed(error.clone());
+                    error!("Failed to connect to Torii: {}", error);
+                }
+            }
         }
-    });
+    }
 }
 
 /// Syncs entities from Torii to the Bevy world.
