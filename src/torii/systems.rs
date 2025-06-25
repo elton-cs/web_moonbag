@@ -13,6 +13,10 @@ use torii_client::error::Error;
 #[derive(Component)]
 pub struct ToriiConnectionTask(Task<Result<torii_client::Client, Error>>);
 
+/// Component to track the async entities fetch task
+#[derive(Component)]
+pub struct ToriiEntitiesFetchTask(Task<Result<String, Error>>);
+
 /// Initializes the Torii connection on startup.
 pub fn initialize_torii_connection(
     mut commands: Commands,
@@ -66,14 +70,61 @@ pub fn check_connection_status(
     }
 }
 
-/// Syncs entities from Torii to the Bevy world.
-pub fn sync_entities(_client: Res<ToriiClient>) {
-    // TODO: Implement entity syncing logic
-    // This would involve:
-    // 1. Querying for updated entities from Torii
-    // 2. Converting Torii entities to Bevy components
-    // 3. Spawning/updating entities in the Bevy world
+/// Spawns a task to fetch entities from Torii
+pub fn spawn_entities_fetch_task(
+    mut commands: Commands,
+    client: Res<ToriiClient>,
+    query: Query<&ToriiEntitiesFetchTask>,
+) {
+    // Only spawn a new task if there isn't one already running
+    if !query.is_empty() {
+        return;
+    }
 
-    // For now, this is a placeholder that runs periodically
-    trace!("Syncing entities from Torii...");
+    trace!("Spawning task to fetch entities from Torii...");
+
+    let task_pool = AsyncComputeTaskPool::get();
+    let client_clone = client.client.clone();
+
+    // Spawn the async task to fetch entities or metadata
+    let task = task_pool.spawn(async move {
+        // For now, let's fetch metadata as a demonstration
+        // In a real implementation, you would use the proper Query type
+        match client_clone.metadata().await {
+            Ok(metadata) => {
+                // Return metadata as a string for logging
+                Ok(format!(
+                    "World Address: {}, Number of Models: {}",
+                    metadata.world_address,
+                    metadata.models.len()
+                ))
+            }
+            Err(e) => Err(e),
+        }
+    });
+
+    // Spawn an entity with the task component to track progress
+    commands.spawn(ToriiEntitiesFetchTask(task));
+}
+
+/// Checks entity fetch task completion and logs the results
+pub fn check_entities_fetch_status(
+    mut commands: Commands,
+    mut task_query: Query<(Entity, &mut ToriiEntitiesFetchTask)>,
+) {
+    for (entity, mut task) in &mut task_query {
+        if let Some(result) = block_on(future::poll_once(&mut task.0)) {
+            // Task is complete, remove the entity
+            commands.entity(entity).despawn();
+
+            match result {
+                Ok(metadata_info) => {
+                    info!("Successfully fetched data from Torii: {}", metadata_info);
+                }
+                Err(error) => {
+                    error!("Failed to fetch data from Torii: {}", error);
+                }
+            }
+        }
+    }
 }
