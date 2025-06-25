@@ -2,6 +2,7 @@ use bevy::{
     prelude::*,
     tasks::{IoTaskPool, futures_lite::StreamExt},
 };
+use crossbeam_channel::{self, Receiver, Sender};
 use starknet::core::types::Felt;
 use std::sync::Arc;
 use torii_client::Client;
@@ -21,9 +22,10 @@ pub struct EntityUpdateEvent {
 }
 
 #[derive(Resource)]
-struct EntityStreamTask(
-    bevy::tasks::Task<Result<EntityUpdateEvent, Box<dyn std::error::Error + Send + Sync>>>,
-);
+struct EntityStreamReceiver(Receiver<EntityUpdateEvent>);
+
+#[derive(Resource)]
+struct EntityStreamTask(bevy::tasks::Task<()>);
 
 pub struct ToriiPlugin;
 
@@ -37,8 +39,7 @@ impl Plugin for ToriiPlugin {
                     poll_torii_client_task,
                     poll_entity_stream_task,
                     log_entity_updates,
-                )
-                    .chain(),
+                ),
             );
     }
 }
@@ -76,8 +77,11 @@ fn poll_torii_client_task(mut commands: Commands, task_res: Option<ResMut<ToriiC
 
                     // Start the entity stream immediately
                     info!("Starting continuous entity stream...");
+                    let (sender, receiver) = crossbeam_channel::unbounded();
+                    commands.insert_resource(EntityStreamReceiver(receiver));
+                    
                     let task_pool = IoTaskPool::get();
-                    let task = task_pool.spawn(create_entity_stream(client_arc));
+                    let task = task_pool.spawn(run_persistent_entity_stream(client_arc, sender));
                     commands.insert_resource(EntityStreamTask(task));
                 }
                 Err(e) => {
@@ -89,68 +93,62 @@ fn poll_torii_client_task(mut commands: Commands, task_res: Option<ResMut<ToriiC
     }
 }
 
-async fn create_entity_stream(
+async fn run_persistent_entity_stream(
     client: Arc<Client>,
-) -> Result<EntityUpdateEvent, Box<dyn std::error::Error + Send + Sync>> {
-    info!("Starting entity update stream...");
-    let mut stream = client.on_entity_updated(None).await?;
+    sender: Sender<EntityUpdateEvent>,
+) {
+    info!("Starting persistent entity update stream...");
+    
+    loop {
+        match client.on_entity_updated(None).await {
+            Ok(mut stream) => {
+                info!("Entity stream connected, waiting for updates...");
+                
+                // Process updates continuously from this stream
+                while let Some(entity_update) = stream.next().await {
+                    match entity_update {
+                        Ok(update) => {
+                            info!("Entity update received: {:?}", update);
 
-    // Wait for the next update from the stream
-    if let Some(entity_update) = stream.next().await {
-        match entity_update {
-            Ok(update) => {
-                info!("Entity update received: {:?}", update);
+                            // Extract useful information from the update
+                            let event = EntityUpdateEvent {
+                                entity_id: format!("entity_{}", update.0),
+                                update_data: format!("{:?}", update),
+                            };
 
-                // Extract useful information from the update
-                let event = EntityUpdateEvent {
-                    entity_id: format!("entity_{}", update.0),
-                    update_data: format!("{:?}", update),
-                };
-
-                Ok(event)
+                            // Send event through channel (ignore if receiver is dropped)
+                            if sender.send(event).is_err() {
+                                warn!("Entity stream receiver dropped, stopping stream");
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            error!("Error in entity stream: {:?}", e);
+                            break; // Break inner loop to reconnect
+                        }
+                    }
+                }
+                
+                error!("Entity stream ended, reconnecting...");
             }
             Err(e) => {
-                error!("Error in entity stream: {:?}", e);
-                Err(e.into())
+                error!("Failed to create entity stream: {:?}", e);
             }
         }
-    } else {
-        Err("Stream ended unexpectedly".into())
+        
+        // Wait a bit before reconnecting
+        bevy::tasks::futures_lite::future::yield_now().await;
     }
 }
 
 fn poll_entity_stream_task(
-    mut commands: Commands,
-    task_res: Option<ResMut<EntityStreamTask>>,
+    receiver_res: Option<Res<EntityStreamReceiver>>,
     mut event_writer: EventWriter<EntityUpdateEvent>,
-    client_res: Option<Res<ToriiClient>>,
 ) {
-    if let Some(mut task_res) = task_res {
-        if let Some(result) = bevy::tasks::block_on(bevy::tasks::poll_once(&mut task_res.0)) {
-            match result {
-                Ok(event) => {
-                    info!("Entity stream received update");
-                    event_writer.write(event);
-
-                    // Immediately start waiting for the next update
-                    if let Some(client_res) = client_res {
-                        let task_pool = IoTaskPool::get();
-                        let task = task_pool.spawn(create_entity_stream(client_res.client.clone()));
-                        commands.insert_resource(EntityStreamTask(task));
-                    }
-                }
-                Err(e) => {
-                    error!("Entity stream failed: {:?}", e);
-
-                    // Restart the stream after an error
-                    if let Some(client_res) = client_res {
-                        info!("Restarting entity stream after error...");
-                        let task_pool = IoTaskPool::get();
-                        let task = task_pool.spawn(create_entity_stream(client_res.client.clone()));
-                        commands.insert_resource(EntityStreamTask(task));
-                    }
-                }
-            }
+    if let Some(receiver_res) = receiver_res {
+        // Try to receive all available events without blocking
+        while let Ok(event) = receiver_res.0.try_recv() {
+            event_writer.write(event);
         }
     }
 }

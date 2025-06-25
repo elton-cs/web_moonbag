@@ -8291,6 +8291,7 @@ name = "web_moonbag"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "crossbeam-channel",
  "log",
  "rand 0.8.5",
  "starknet 0.15.1",
