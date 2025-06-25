@@ -8294,7 +8294,6 @@ dependencies = [
  "log",
  "rand 0.8.5",
  "starknet 0.15.1",
- "tokio",
  "torii-client",
  "tracing",
  "wasm-bindgen",
