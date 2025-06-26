@@ -10,12 +10,20 @@ pub struct GameStateDisplayPlugin;
 impl Plugin for GameStateDisplayPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PlayerNavigation::default())
-            .add_systems(Startup, (spawn_game_state_display, spawn_start_game_button))
+            .add_systems(
+                Startup,
+                (
+                    spawn_game_state_display,
+                    spawn_game_style_display,
+                    spawn_start_game_button,
+                ),
+            )
             .add_systems(
                 Update,
                 (
                     collect_available_players,
                     update_game_state_display,
+                    update_game_style_display,
                     handle_navigation_buttons,
                     handle_start_game_button,
                     handle_escape_button,
@@ -62,6 +70,30 @@ struct StartGameButton;
 
 #[derive(Component)]
 struct EscapeButton;
+
+#[derive(Component)]
+struct GameStyleDisplay;
+
+#[derive(Component)]
+struct GameStyleDisplayRoot;
+
+#[derive(Component)]
+struct MoonRocksCountText;
+
+#[derive(Component)]
+struct HealthCountText;
+
+#[derive(Component)]
+struct LevelText;
+
+#[derive(Component)]
+struct PointsText;
+
+#[derive(Component)]
+struct BlueBarText;
+
+#[derive(Component)]
+struct OrangeBarText;
 
 #[derive(Resource, Default)]
 struct PlayerNavigation {
@@ -362,6 +394,317 @@ fn spawn_game_state_display(mut commands: Commands) {
                         Text::new("Loading..."),
                         TextFont::from_font_size(12.0),
                         TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                    ));
+                });
+        });
+}
+
+fn spawn_game_style_display(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Root container (hidden by default)
+    commands
+        .spawn((
+            GameStyleDisplayRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                width: Percent(100.0),
+                height: Percent(100.0),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.0)),
+            Visibility::Hidden,
+        ))
+        .with_children(|parent| {
+            // Top left - MoonRocks crystal icon and count
+            parent
+                .spawn((Node {
+                    position_type: PositionType::Absolute,
+                    top: Px(20.0),
+                    left: Px(20.0),
+                    width: Px(80.0),
+                    height: Px(80.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },))
+                .with_children(|parent| {
+                    // Purple crystal placeholder
+                    parent.spawn((
+                        Node {
+                            width: Px(60.0),
+                            height: Px(60.0),
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgb(0.6, 0.2, 0.8)), // Purple placeholder
+                        BorderRadius::all(Px(8.0)),
+                    ));
+
+                    // MoonRocks count text
+                    parent.spawn((
+                        MoonRocksCountText,
+                        Text::new("0"),
+                        TextFont {
+                            font: asset_server.load("fonts/font1.otf"),
+                            font_size: 24.0,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        Node {
+                            position_type: PositionType::Absolute,
+                            top: Px(65.0),
+                            left: Px(20.0),
+                            ..default()
+                        },
+                    ));
+                });
+
+            // Top right - Health hearts
+            parent
+                .spawn((Node {
+                    position_type: PositionType::Absolute,
+                    top: Px(20.0),
+                    right: Px(20.0),
+                    width: Px(100.0),
+                    height: Px(80.0),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },))
+                .with_children(|parent| {
+                    // Health count text
+                    parent.spawn((
+                        HealthCountText,
+                        Text::new("3"),
+                        TextFont {
+                            font: asset_server.load("fonts/font1.otf"),
+                            font_size: 24.0,
+                            ..default()
+                        },
+                        TextColor(Color::srgb(1.0, 0.2, 0.2)), // Red for health
+                    ));
+
+                    // Red hearts placeholder
+                    parent
+                        .spawn((Node {
+                            flex_direction: FlexDirection::Row,
+                            column_gap: Px(5.0),
+                            margin: UiRect::top(Px(5.0)),
+                            ..default()
+                        },))
+                        .with_children(|parent| {
+                            // Three heart placeholders
+                            for _ in 0..3 {
+                                parent.spawn((
+                                    Node {
+                                        width: Px(20.0),
+                                        height: Px(20.0),
+                                        ..default()
+                                    },
+                                    BackgroundColor(Color::srgb(1.0, 0.2, 0.2)), // Red hearts
+                                    BorderRadius::all(Px(3.0)),
+                                ));
+                            }
+                        });
+                });
+
+            // Top center - Level indicator (green oval)
+            parent
+                .spawn((Node {
+                    position_type: PositionType::Absolute,
+                    top: Px(20.0),
+                    left: Percent(50.0),
+                    width: Px(80.0),
+                    height: Px(40.0),
+                    margin: UiRect::left(Px(-40.0)), // Center horizontally
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },))
+                .with_children(|parent| {
+                    // Green oval background
+                    parent.spawn((
+                        Node {
+                            width: Px(80.0),
+                            height: Px(40.0),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgb(0.2, 0.8, 0.2)), // Green background
+                        BorderRadius::all(Px(20.0)),                 // Oval shape
+                    ));
+
+                    // Level text
+                    parent.spawn((
+                        LevelText,
+                        Text::new("1"),
+                        TextFont {
+                            font: asset_server.load("fonts/font1.otf"),
+                            font_size: 24.0,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        Node {
+                            position_type: PositionType::Absolute,
+                            ..default()
+                        },
+                    ));
+                });
+
+            // Center - Large moonbag with points
+            parent
+                .spawn((Node {
+                    position_type: PositionType::Absolute,
+                    top: Percent(50.0),
+                    left: Percent(50.0),
+                    width: Px(200.0),
+                    height: Px(200.0),
+                    margin: UiRect {
+                        left: Px(-100.0),
+                        top: Px(-100.0),
+                        ..default()
+                    },
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },))
+                .with_children(|parent| {
+                    // Moonbag placeholder (large circle)
+                    parent.spawn((
+                        Node {
+                            width: Px(180.0),
+                            height: Px(180.0),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgba(0.5, 0.5, 0.5, 0.8)), // Gray moonbag
+                        BorderColor(Color::srgb(0.8, 0.8, 0.8)),
+                        BorderRadius::all(Px(90.0)), // Circular
+                    ));
+
+                    // Points text inside moonbag
+                    parent.spawn((
+                        PointsText,
+                        Text::new("0"),
+                        TextFont {
+                            font: asset_server.load("fonts/font1.otf"),
+                            font_size: 36.0,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        Node {
+                            position_type: PositionType::Absolute,
+                            ..default()
+                        },
+                    ));
+                });
+
+            // Bottom status bar
+            parent
+                .spawn((Node {
+                    position_type: PositionType::Absolute,
+                    bottom: Px(20.0),
+                    left: Percent(50.0),
+                    width: Px(300.0),
+                    height: Px(50.0),
+                    margin: UiRect::left(Px(-150.0)), // Center horizontally
+                    flex_direction: FlexDirection::Row,
+                    ..default()
+                },))
+                .with_children(|parent| {
+                    // Blue section
+                    parent
+                        .spawn((
+                            Node {
+                                width: Px(120.0),
+                                height: Px(50.0),
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgb(0.2, 0.4, 0.8)), // Blue background
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                BlueBarText,
+                                Text::new("0"),
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 20.0,
+                                    ..default()
+                                },
+                                TextColor(Color::WHITE),
+                            ));
+                        });
+
+                    // Orange section
+                    parent
+                        .spawn((
+                            Node {
+                                width: Px(120.0),
+                                height: Px(50.0),
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgb(0.8, 0.5, 0.2)), // Orange background
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                OrangeBarText,
+                                Text::new("0"),
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 20.0,
+                                    ..default()
+                                },
+                                TextColor(Color::WHITE),
+                            ));
+                        });
+
+                    // Golden orb placeholder
+                    parent.spawn((
+                        Node {
+                            width: Px(60.0),
+                            height: Px(50.0),
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgb(0.8, 0.6, 0.2)), // Golden color
+                        BorderRadius::all(Px(25.0)),
+                    ));
+                });
+
+            // Escape button in top corner
+            parent
+                .spawn((
+                    EscapeButton,
+                    Button,
+                    Node {
+                        position_type: PositionType::Absolute,
+                        top: Px(20.0),
+                        right: Px(140.0), // To the left of health hearts
+                        width: Px(60.0),
+                        height: Px(30.0),
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    BackgroundColor(Color::srgba(0.3, 0.1, 0.1, 0.9)),
+                    BorderColor(Color::srgb(0.8, 0.3, 0.3)),
+                    BorderRadius::all(Px(5.0)),
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Text::new("ESC"),
+                        TextFont {
+                            font: asset_server.load("fonts/font1.otf"),
+                            font_size: 12.0,
+                            ..default()
+                        },
+                        TextColor(Color::srgb(1.0, 0.8, 0.8)),
                     ));
                 });
         });
@@ -747,7 +1090,7 @@ fn handle_start_game_button(
     >,
     mut display_query: Query<
         &mut Visibility,
-        (With<GameStateDisplayRoot>, Without<StartGameButton>),
+        (With<GameStyleDisplayRoot>, Without<StartGameButton>),
     >,
 ) {
     for (interaction, mut bg_color, mut border_color, mut button_visibility) in &mut button_query {
@@ -772,20 +1115,140 @@ fn handle_start_game_button(
     }
 }
 
+fn update_game_style_display(
+    game_state: Option<Res<GameState>>,
+    player_nav: Res<PlayerNavigation>,
+    mut moonrocks_query: Query<&mut Text, With<MoonRocksCountText>>,
+    mut health_query: Query<&mut Text, (With<HealthCountText>, Without<MoonRocksCountText>)>,
+    mut level_query: Query<
+        &mut Text,
+        (
+            With<LevelText>,
+            Without<MoonRocksCountText>,
+            Without<HealthCountText>,
+        ),
+    >,
+    mut points_query: Query<
+        &mut Text,
+        (
+            With<PointsText>,
+            Without<MoonRocksCountText>,
+            Without<HealthCountText>,
+            Without<LevelText>,
+        ),
+    >,
+    mut blue_bar_query: Query<
+        &mut Text,
+        (
+            With<BlueBarText>,
+            Without<MoonRocksCountText>,
+            Without<HealthCountText>,
+            Without<LevelText>,
+            Without<PointsText>,
+        ),
+    >,
+    mut orange_bar_query: Query<
+        &mut Text,
+        (
+            With<OrangeBarText>,
+            Without<MoonRocksCountText>,
+            Without<HealthCountText>,
+            Without<LevelText>,
+            Without<PointsText>,
+            Without<BlueBarText>,
+        ),
+    >,
+) {
+    let Some(game_state) = game_state else { return };
+    let Some(current_player) = player_nav.get_current_player() else {
+        // Set default values if no player selected
+        if let Ok(mut text) = moonrocks_query.single_mut() {
+            **text = "0".to_string();
+        }
+        if let Ok(mut text) = health_query.single_mut() {
+            **text = "3".to_string();
+        }
+        if let Ok(mut text) = level_query.single_mut() {
+            **text = "1".to_string();
+        }
+        if let Ok(mut text) = points_query.single_mut() {
+            **text = "0".to_string();
+        }
+        if let Ok(mut text) = blue_bar_query.single_mut() {
+            **text = "0".to_string();
+        }
+        if let Ok(mut text) = orange_bar_query.single_mut() {
+            **text = "0".to_string();
+        }
+        return;
+    };
+
+    // Update MoonRocks count
+    if let Ok(mut text) = moonrocks_query.single_mut() {
+        if let Some(moon_rock) = game_state.moon_rocks.get(&current_player) {
+            **text = moon_rock.amount.to_string();
+        } else {
+            **text = "0".to_string();
+        }
+    }
+
+    // Get the last game for this player
+    if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+        if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+            // Update health
+            if let Ok(mut text) = health_query.single_mut() {
+                **text = game.health.to_string();
+            }
+
+            // Update level
+            if let Ok(mut text) = level_query.single_mut() {
+                **text = game.current_level.to_string();
+            }
+
+            // Update points
+            if let Ok(mut text) = points_query.single_mut() {
+                **text = game.points.to_string();
+            }
+
+            // For now, we'll use some game data for the blue and orange bars
+            // Blue bar could be health * 100 or some other metric
+            if let Ok(mut text) = blue_bar_query.single_mut() {
+                **text = (game.health * 100).to_string();
+            }
+
+            // Orange bar could be level * 50 or some other metric
+            if let Ok(mut text) = orange_bar_query.single_mut() {
+                **text = (game.current_level * 50).to_string();
+            }
+        } else {
+            // No game data, use defaults
+            if let Ok(mut text) = health_query.single_mut() {
+                **text = "3".to_string();
+            }
+            if let Ok(mut text) = level_query.single_mut() {
+                **text = "1".to_string();
+            }
+            if let Ok(mut text) = points_query.single_mut() {
+                **text = "0".to_string();
+            }
+            if let Ok(mut text) = blue_bar_query.single_mut() {
+                **text = "0".to_string();
+            }
+            if let Ok(mut text) = orange_bar_query.single_mut() {
+                **text = "0".to_string();
+            }
+        }
+    }
+}
+
 fn handle_escape_button(
     mut escape_button_query: Query<
         (&Interaction, &mut BackgroundColor, &mut BorderColor),
         (Changed<Interaction>, With<EscapeButton>),
     >,
-    mut display_query: Query<&mut Visibility, (With<GameStateDisplayRoot>, Without<EscapeButton>)>,
-    mut start_button_query: Query<
-        &mut Visibility,
-        (
-            With<StartGameButton>,
-            Without<GameStateDisplayRoot>,
-            Without<EscapeButton>,
-        ),
-    >,
+    mut visibility_query: Query<&mut Visibility>,
+    game_style_display_query: Query<Entity, With<GameStyleDisplayRoot>>,
+    start_button_query: Query<Entity, With<StartGameButton>>,
 ) {
     for (interaction, mut bg_color, mut border_color) in &mut escape_button_query {
         match *interaction {
@@ -793,14 +1256,18 @@ fn handle_escape_button(
                 *bg_color = BackgroundColor(Color::srgba(0.5, 0.2, 0.2, 0.95)); // Brighter red when pressed
                 *border_color = BorderColor(Color::srgb(1.0, 0.5, 0.5)); // Brighter red border
 
-                // Hide the game state UI
-                if let Ok(mut display_visibility) = display_query.single_mut() {
-                    *display_visibility = Visibility::Hidden;
+                // Hide the game style display UI
+                if let Ok(display_entity) = game_style_display_query.single() {
+                    if let Ok(mut visibility) = visibility_query.get_mut(display_entity) {
+                        *visibility = Visibility::Hidden;
+                    }
                 }
 
                 // Show the start game button again
-                if let Ok(mut start_button_visibility) = start_button_query.single_mut() {
-                    *start_button_visibility = Visibility::Visible;
+                if let Ok(start_button_entity) = start_button_query.single() {
+                    if let Ok(mut visibility) = visibility_query.get_mut(start_button_entity) {
+                        *visibility = Visibility::Visible;
+                    }
                 }
             }
             Interaction::Hovered => {
