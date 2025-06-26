@@ -362,71 +362,79 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
 
                     // MoonRocks Display (Bottom Left)
                     parent
-                        .spawn((Node {
-                            position_type: PositionType::Absolute,
-                            bottom: Px(40.0),
-                            left: Px(40.0),
-                            flex_direction: FlexDirection::Row,
-                            align_items: AlignItems::Center,
-                            column_gap: Px(10.0),
-                            padding: UiRect::all(Px(12.0)),
-                            border: UiRect::all(Px(2.0)),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgba(0.1, 0.2, 0.4, 0.8)),
-                        BorderColor(Color::srgb(0.4, 0.7, 1.0)),
-                        BorderRadius::all(Px(20.0)),
+                        .spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                bottom: Px(40.0),
+                                left: Px(40.0),
+                                width: Px(120.0), // Wider to accommodate aspect ratio
+                                height: Px(50.0),  // Height based on aspect ratio ~2.37:1
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
                         ))
                         .with_children(|parent| {
-                            // Moon Rock icon
+                            // Moon Rock image background
                             parent.spawn((
                                 ImageNode::new(asset_server.load("Moonbag/Items/Moon Rock supply.png")),
                                 Node {
-                                    width: Px(25.0),
-                                    height: Px(25.0),
+                                    position_type: PositionType::Absolute,
+                                    width: Px(120.0),
+                                    height: Px(50.0),
                                     ..default()
                                 },
                             ));
+                            // Moon Rock text overlay
                             parent.spawn((
                                 MoonRocksText,
                                 Text::new("490"),
                                 TextFont::from_font_size(24.0),
                                 TextColor(Color::srgb(0.8, 0.9, 1.0)),
+                                Node {
+                                    position_type: PositionType::Absolute,
+                                    align_self: AlignSelf::Center,
+                                    ..default()
+                                },
                             ));
                         });
 
                     // Cheddah Display (Bottom Right)
                     parent
-                        .spawn((Node {
-                            position_type: PositionType::Absolute,
-                            bottom: Px(40.0),
-                            right: Px(40.0),
-                            flex_direction: FlexDirection::Row,
-                            align_items: AlignItems::Center,
-                            column_gap: Px(10.0),
-                            padding: UiRect::all(Px(12.0)),
-                            border: UiRect::all(Px(2.0)),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgba(0.4, 0.2, 0.1, 0.8)),
-                        BorderColor(Color::srgb(1.0, 0.6, 0.3)),
-                        BorderRadius::all(Px(20.0)),
+                        .spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                bottom: Px(40.0),
+                                right: Px(40.0),
+                                width: Px(120.0), // Wider to accommodate aspect ratio
+                                height: Px(46.0),  // Height based on aspect ratio ~2.63:1
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                ..default()
+                            },
                         ))
                         .with_children(|parent| {
-                            // Cheddah icon
+                            // Cheddah image background
                             parent.spawn((
                                 ImageNode::new(asset_server.load("Moonbag/Items/Cheddah supply.png")),
                                 Node {
-                                    width: Px(25.0),
-                                    height: Px(25.0),
+                                    position_type: PositionType::Absolute,
+                                    width: Px(120.0),
+                                    height: Px(46.0),
                                     ..default()
                                 },
                             ));
+                            // Cheddah text overlay
                             parent.spawn((
                                 ShopInventoryText,
                                 Text::new("0"),
                                 TextFont::from_font_size(24.0),
                                 TextColor(Color::srgb(1.0, 0.9, 0.7)),
+                                Node {
+                                    position_type: PositionType::Absolute,
+                                    align_self: AlignSelf::Center,
+                                    ..default()
+                                },
                             ));
                         });
 
