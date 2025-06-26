@@ -134,7 +134,7 @@ impl PlayerNavigation {
     }
 }
 
-fn spawn_game_state_display(mut commands: Commands) {
+fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Root container
     commands
         .spawn((
@@ -378,15 +378,14 @@ fn spawn_game_state_display(mut commands: Commands) {
                         BorderRadius::all(Px(20.0)),
                         ))
                         .with_children(|parent| {
-                            // Crystal icon placeholder
+                            // Moon Rock icon
                             parent.spawn((
+                                ImageNode::new(asset_server.load("Moonbag/Items/Moon Rock supply.png")),
                                 Node {
                                     width: Px(25.0),
                                     height: Px(25.0),
                                     ..default()
                                 },
-                                BackgroundColor(Color::srgb(0.5, 0.3, 0.9)),
-                                BorderRadius::all(Px(6.0)),
                             ));
                             parent.spawn((
                                 MoonRocksText,
@@ -414,15 +413,14 @@ fn spawn_game_state_display(mut commands: Commands) {
                         BorderRadius::all(Px(20.0)),
                         ))
                         .with_children(|parent| {
-                            // Cheese icon placeholder
+                            // Cheddah icon
                             parent.spawn((
+                                ImageNode::new(asset_server.load("Moonbag/Items/Cheddah supply.png")),
                                 Node {
                                     width: Px(25.0),
                                     height: Px(25.0),
                                     ..default()
                                 },
-                                BackgroundColor(Color::srgb(1.0, 0.7, 0.2)),
-                                BorderRadius::all(Px(12.0)),
                             ));
                             parent.spawn((
                                 ShopInventoryText,
