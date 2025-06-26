@@ -351,12 +351,12 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                     Node {
                                         width: Px(30.0),
                                         height: Px(30.0),
-                                        border: UiRect::all(Px(2.0)),
                                         ..default()
                                     },
-                                    BackgroundColor(Color::srgb(0.3, 0.1, 0.1)), // Start dimmed
-                                    BorderColor(Color::srgb(0.5, 0.2, 0.2)),
-                                    BorderRadius::all(Px(15.0)),
+                                    ImageNode::new(
+                                        asset_server.load("Moonbag/Items/Heart.png"),
+                                    ),
+                                    Visibility::Hidden, // Start hidden
                                 ));
                             }
                         });
@@ -800,14 +800,13 @@ fn update_game_state_display(
 fn update_health_hearts(
     game_state: Option<Res<GameState>>,
     player_nav: Res<PlayerNavigation>,
-    mut hearts_query: Query<(&HealthHeart, &mut BackgroundColor, &mut BorderColor)>,
+    mut hearts_query: Query<(&HealthHeart, &mut Visibility)>,
 ) {
     let Some(game_state) = game_state else { return };
     let Some(current_player) = player_nav.get_current_player() else {
-        // No player selected - dim all hearts
-        for (_, mut bg_color, mut border_color) in &mut hearts_query {
-            *bg_color = BackgroundColor(Color::srgb(0.3, 0.1, 0.1));
-            *border_color = BorderColor(Color::srgb(0.5, 0.2, 0.2));
+        // No player selected - hide all hearts
+        for (_, mut visibility) in &mut hearts_query {
+            *visibility = Visibility::Hidden;
         }
         return;
     };
@@ -823,16 +822,14 @@ fn update_health_hearts(
         5 // Default health
     };
 
-    // Update heart appearances based on current health
-    for (heart, mut bg_color, mut border_color) in &mut hearts_query {
+    // Update heart visibility based on current health
+    for (heart, mut visibility) in &mut hearts_query {
         if heart.index < current_health {
-            // Active heart - bright red
-            *bg_color = BackgroundColor(Color::srgb(0.9, 0.2, 0.3));
-            *border_color = BorderColor(Color::srgb(1.0, 0.4, 0.5));
+            // Show heart for current health
+            *visibility = Visibility::Visible;
         } else {
-            // Inactive heart - dimmed
-            *bg_color = BackgroundColor(Color::srgb(0.3, 0.1, 0.1));
-            *border_color = BorderColor(Color::srgb(0.5, 0.2, 0.2));
+            // Hide heart for lost health
+            *visibility = Visibility::Hidden;
         }
     }
 }
