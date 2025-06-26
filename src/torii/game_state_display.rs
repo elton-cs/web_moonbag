@@ -236,7 +236,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 PlayerInfoText,
                                 Text::new("No Players"),
-                                TextFont::from_font_size(18.0),
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 18.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.9, 0.9, 1.0)),
                                 Node {
                                     align_self: AlignSelf::Center,
@@ -284,13 +288,21 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 LevelText,
                                 Text::new("Level 1"),
-                                TextFont::from_font_size(16.0),
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 16.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.7, 0.7, 0.3)),
                             ));
                             parent.spawn((
                                 GameCountersText,
                                 Text::new("0"), // This will show milestone instead of level
-                                TextFont::from_font_size(48.0), // Make it larger and more prominent
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 48.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.9, 0.9, 0.4)),
                             ));
                         });
@@ -322,7 +334,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 ActiveGamesText,
                                 Text::new("12"),
-                                TextFont::from_font_size(120.0),
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 120.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.9, 0.3, 0.9)),
                                 Node {
                                     align_self: AlignSelf::Center,
@@ -337,26 +353,30 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             position_type: PositionType::Absolute,
                             top: Percent(50.0), // Center vertically to match moonbag
                             right: Px(40.0),
-                            margin: UiRect::top(Px(-80.0)), // Offset to center the 5 hearts stack (5*30 + 4*8 gaps = 182px, half = 91px)
+                            margin: UiRect::top(Px(-60.0)), // Adjust for more compact layout
                             flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
-                            row_gap: Px(8.0),
+                            row_gap: Px(-5.0), // Negative gap for overlapping hearts
                             ..default()
                         },))
                         .with_children(|parent| {
-                            // Create 5 heart slots
+                            // Create 5 heart slots with alternating positioning for compact layout
                             for i in 0..5 {
                                 parent.spawn((
                                     HealthHeart { index: i },
                                     Node {
-                                        width: Px(30.0),
-                                        height: Px(30.0),
+                                        width: Px(35.0),  // Slightly larger hearts
+                                        height: Px(35.0),
+                                        margin: if i % 2 == 0 { 
+                                            UiRect::left(Px(-8.0)) // Offset even hearts left
+                                        } else { 
+                                            UiRect::right(Px(-8.0)) // Offset odd hearts right
+                                        },
                                         ..default()
                                     },
                                     ImageNode::new(
-                                        asset_server.load("Moonbag/Items/Heart.png"),
+                                        asset_server.load("Moonbag/Items/grey heart.png"), // Start with grey hearts
                                     ),
-                                    Visibility::Hidden, // Start hidden
                                 ));
                             }
                         });
@@ -390,7 +410,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 MoonRocksText,
                                 Text::new("490"),
-                                TextFont::from_font_size(28.0), // Keep same font size
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 28.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.2, 0.4, 0.8)), // Much darker blue for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
@@ -430,7 +454,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 ShopInventoryText,
                                 Text::new("0"),
-                                TextFont::from_font_size(28.0), // Keep same font size
+                                TextFont {
+                                    font: asset_server.load("fonts/font1.otf"),
+                                    font_size: 28.0,
+                                    ..default()
+                                },
                                 TextColor(Color::srgb(0.8, 0.4, 0.1)), // Much darker orange/brown for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
@@ -800,13 +828,14 @@ fn update_game_state_display(
 fn update_health_hearts(
     game_state: Option<Res<GameState>>,
     player_nav: Res<PlayerNavigation>,
-    mut hearts_query: Query<(&HealthHeart, &mut Visibility)>,
+    mut hearts_query: Query<(&HealthHeart, &mut ImageNode)>,
+    asset_server: Res<AssetServer>,
 ) {
     let Some(game_state) = game_state else { return };
     let Some(current_player) = player_nav.get_current_player() else {
-        // No player selected - hide all hearts
-        for (_, mut visibility) in &mut hearts_query {
-            *visibility = Visibility::Hidden;
+        // No player selected - show all grey hearts
+        for (_, mut image_node) in &mut hearts_query {
+            *image_node = ImageNode::new(asset_server.load("Moonbag/Items/grey heart.png"));
         }
         return;
     };
@@ -822,14 +851,14 @@ fn update_health_hearts(
         5 // Default health
     };
 
-    // Update heart visibility based on current health
-    for (heart, mut visibility) in &mut hearts_query {
+    // Update heart images based on current health
+    for (heart, mut image_node) in &mut hearts_query {
         if heart.index < current_health {
-            // Show heart for current health
-            *visibility = Visibility::Visible;
+            // Red heart for current health
+            *image_node = ImageNode::new(asset_server.load("Moonbag/Items/Heart.png"));
         } else {
-            // Hide heart for lost health
-            *visibility = Visibility::Hidden;
+            // Grey heart for lost health
+            *image_node = ImageNode::new(asset_server.load("Moonbag/Items/grey heart.png"));
         }
     }
 }
