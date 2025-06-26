@@ -8,7 +8,7 @@ pub(super) fn plugin(app: &mut App) {
         Startup,
         (spawn_background, spawn_moon, spawn_lighting).chain(),
     );
-    app.add_systems(Update, rotate_moon);
+    app.add_systems(Update, (rotate_moon, rotate_background));
     app.init_resource::<BackgroundAssets>();
 }
 
@@ -53,6 +53,7 @@ fn spawn_background(
         Transform::from_translation(Vec3::new(0.0, 0.0, -5.0)) // Far behind in 3D space
             .with_rotation(Quat::from_rotation_x(0.0)), // Face the camera
         Visibility::default(),
+        BackgroundRotation, // Add rotation component
     ));
 }
 
@@ -98,6 +99,10 @@ fn spawn_lighting(mut commands: Commands) {
 #[derive(Component)]
 struct MoonRotation;
 
+/// Component to mark entities that should rotate as background
+#[derive(Component)]
+struct BackgroundRotation;
+
 /// System to rotate the moon irregularly like a floating space rock
 fn rotate_moon(time: Res<Time>, mut query: Query<&mut Transform, With<MoonRotation>>) {
     let elapsed = time.elapsed_secs();
@@ -116,5 +121,16 @@ fn rotate_moon(time: Res<Time>, mut query: Query<&mut Transform, With<MoonRotati
         transform.rotate_x(delta_x_rotation);
         transform.rotate_y(delta_y_rotation);
         transform.rotate_z(delta_z_rotation);
+    }
+}
+
+/// System to slowly rotate the background around its center (Z-axis)
+fn rotate_background(time: Res<Time>, mut query: Query<&mut Transform, With<BackgroundRotation>>) {
+    let rotation_speed = 0.05; // Very slow rotation speed in radians per second
+    let delta_rotation = rotation_speed * time.delta_secs();
+
+    for mut transform in query.iter_mut() {
+        // Rotate around the Z-axis to create a slow spinning starfield effect
+        transform.rotate_z(delta_rotation);
     }
 }
