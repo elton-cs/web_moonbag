@@ -297,25 +297,26 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
 
                     // Central Moonbag
                     parent
-                        .spawn((Node {
-                            position_type: PositionType::Absolute,
-                            top: Percent(50.0), // Center vertically
-                            left: Percent(50.0),
-                            width: Px(300.0),
-                            height: Px(300.0),
-                            margin: UiRect {
-                                left: Px(-150.0), // Center horizontally
-                                top: Px(-150.0),  // Center vertically (half of height)
+                        .spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                top: Percent(50.0), // Center vertically
+                                left: Percent(50.0),
+                                width: Px(300.0),
+                                height: Px(300.0),
+                                margin: UiRect {
+                                    left: Px(-150.0), // Center horizontally
+                                    top: Px(-150.0),  // Center vertically (half of height)
+                                    ..default()
+                                },
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                border: UiRect::all(Px(3.0)),
                                 ..default()
                             },
-                            align_items: AlignItems::Center,
-                            justify_content: JustifyContent::Center,
-                            border: UiRect::all(Px(3.0)),
-                            ..default()
-                        },
-                        BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
-                        BorderColor(Color::srgb(0.4, 0.8, 1.0)),
-                        BorderRadius::all(Px(150.0)), // Make it circular
+                            BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
+                            BorderColor(Color::srgb(0.4, 0.8, 1.0)),
+                            BorderRadius::all(Px(150.0)), // Make it circular
                         ))
                         .with_children(|parent| {
                             parent.spawn((
@@ -362,26 +363,26 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
 
                     // MoonRocks Display (Bottom Left)
                     parent
-                        .spawn((
-                            Node {
-                                position_type: PositionType::Absolute,
-                                bottom: Px(40.0),
-                                left: Px(40.0),
-                                width: Px(192.0), // 1.6x the original width (120 * 1.6)
-                                height: Px(80.0),  // 1.6x the original height (50 * 1.6)
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                ..default()
-                            },
-                        ))
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            bottom: Px(40.0),
+                            left: Px(40.0),
+                            width: Px(192.0), // 1.6x the original width (120 * 1.6)
+                            height: Px(80.0), // 1.6x the original height (50 * 1.6)
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },))
                         .with_children(|parent| {
                             // Moon Rock image background
                             parent.spawn((
-                                ImageNode::new(asset_server.load("Moonbag/Items/Moon Rock supply.png")),
+                                ImageNode::new(
+                                    asset_server.load("Moonbag/Items/Moon Rock supply.png"),
+                                ),
                                 Node {
                                     position_type: PositionType::Absolute,
                                     width: Px(192.0), // 1.6x the original width
-                                    height: Px(80.0),  // 1.6x the original height
+                                    height: Px(80.0), // 1.6x the original height
                                     ..default()
                                 },
                             ));
@@ -389,12 +390,12 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 MoonRocksText,
                                 Text::new("490"),
-                                TextFont::from_font_size(32.0), // Keep same font size
+                                TextFont::from_font_size(28.0), // Keep same font size
                                 TextColor(Color::srgb(0.2, 0.4, 0.8)), // Much darker blue for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
-                                    left: Px(56.0), // Adjust for 1.6x size (35 * 1.6)
-                                    align_self: AlignSelf::Center,
+                                    right: Px(35.0), // Move closer to right edge
+                                    top: Px(40.0),   // Move down by 10 pixels: 25 + 10
                                     ..default()
                                 },
                             ));
@@ -402,26 +403,26 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
 
                     // Cheddah Display (Bottom Right)
                     parent
-                        .spawn((
-                            Node {
-                                position_type: PositionType::Absolute,
-                                bottom: Px(40.0),
-                                right: Px(40.0),
-                                width: Px(192.0), // 1.6x the original width (120 * 1.6)
-                                height: Px(74.0),  // 1.6x the original height (46 * 1.6)
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                ..default()
-                            },
-                        ))
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            bottom: Px(40.0),
+                            right: Px(40.0),
+                            width: Px(192.0), // 1.6x the original width (120 * 1.6)
+                            height: Px(74.0), // 1.6x the original height (46 * 1.6)
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            ..default()
+                        },))
                         .with_children(|parent| {
                             // Cheddah image background
                             parent.spawn((
-                                ImageNode::new(asset_server.load("Moonbag/Items/Cheddah supply.png")),
+                                ImageNode::new(
+                                    asset_server.load("Moonbag/Items/Cheddah supply.png"),
+                                ),
                                 Node {
                                     position_type: PositionType::Absolute,
                                     width: Px(192.0), // 1.6x the original width
-                                    height: Px(74.0),  // 1.6x the original height
+                                    height: Px(74.0), // 1.6x the original height
                                     ..default()
                                 },
                             ));
@@ -429,12 +430,12 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 ShopInventoryText,
                                 Text::new("0"),
-                                TextFont::from_font_size(32.0), // Keep same font size
+                                TextFont::from_font_size(28.0), // Keep same font size
                                 TextColor(Color::srgb(0.8, 0.4, 0.1)), // Much darker orange/brown for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
-                                    right: Px(56.0), // Adjust for 1.6x size (35 * 1.6)
-                                    align_self: AlignSelf::Center,
+                                    left: Px(35.0), // Move closer to left edge
+                                    top: Px(31.0),  // Move down by 10 pixels: 21 + 10
                                     ..default()
                                 },
                             ));
@@ -736,7 +737,8 @@ fn update_game_state_display(
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
             if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
                 // Get milestone target for current level (subtract 1 since levels are 1-indexed in display but 0-indexed in milestone logic)
-                let milestone = Milestone::get_milestone_for_level(game.current_level.saturating_sub(1));
+                let milestone =
+                    Milestone::get_milestone_for_level(game.current_level.saturating_sub(1));
                 **text = milestone.to_string();
             } else {
                 **text = Milestone::get_milestone_for_level(0).to_string(); // Default to level 1 milestone (12)
@@ -801,16 +803,17 @@ fn update_health_hearts(
     mut hearts_query: Query<(&HealthHeart, &mut BackgroundColor, &mut BorderColor)>,
 ) {
     let Some(game_state) = game_state else { return };
-    let Some(current_player) = player_nav.get_current_player() else { 
+    let Some(current_player) = player_nav.get_current_player() else {
         // No player selected - dim all hearts
         for (_, mut bg_color, mut border_color) in &mut hearts_query {
             *bg_color = BackgroundColor(Color::srgb(0.3, 0.1, 0.1));
             *border_color = BorderColor(Color::srgb(0.5, 0.2, 0.2));
         }
-        return; 
+        return;
     };
 
-    let current_health = if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+    let current_health = if let Some(last_game_id) = get_last_game_id(&game_state, &current_player)
+    {
         if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
             game.health as usize
         } else {
