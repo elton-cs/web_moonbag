@@ -106,7 +106,7 @@ struct BackgroundRotation;
 /// System to rotate the moon irregularly like a floating space rock
 fn rotate_moon(time: Res<Time>, mut query: Query<&mut Transform, With<MoonRotation>>) {
     let elapsed = time.elapsed_secs();
-    
+
     // Use sine and cosine functions with different frequencies to create irregular rotation
     let x_rotation_speed = 0.2 * (1.0 + 0.5 * (elapsed * 0.7).sin()); // Varies between 0.1 and 0.3
     let y_rotation_speed = 0.15 * (1.0 + 0.3 * (elapsed * 1.1).cos()); // Varies between ~0.105 and ~0.195

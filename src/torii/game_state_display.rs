@@ -10,16 +10,16 @@ pub struct GameStateDisplayPlugin;
 impl Plugin for GameStateDisplayPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PlayerNavigation::default())
-            .add_systems(Startup, spawn_game_state_display)
+            .add_systems(Startup, (spawn_game_state_display, spawn_start_game_button))
             .add_systems(
                 Update,
                 (
                     collect_available_players,
                     update_game_state_display,
                     handle_navigation_buttons,
+                    handle_start_game_button,
                 ),
-            )
-            .add_systems(Update, toggle_display);
+            );
     }
 }
 
@@ -55,6 +55,9 @@ struct NextPlayerButton;
 
 #[derive(Component)]
 struct PlayerInfoText;
+
+#[derive(Component)]
+struct StartGameButton;
 
 #[derive(Resource, Default)]
 struct PlayerNavigation {
@@ -316,6 +319,44 @@ fn spawn_game_state_display(mut commands: Commands) {
                         TextColor(Color::srgb(0.9, 0.9, 0.9)),
                     ));
                 });
+        });
+}
+
+fn spawn_start_game_button(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands
+        .spawn((
+            StartGameButton,
+            Button,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Percent(50.0),
+                left: Percent(50.0),
+                width: Px(200.0),
+                height: Px(60.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                margin: UiRect {
+                    left: Px(-100.0), // Half of width to center
+                    top: Px(-30.0),   // Half of height to center
+                    ..default()
+                },
+                border: UiRect::all(Px(2.0)),
+                ..default()
+            },
+            BackgroundColor(Color::srgba(0.05, 0.1, 0.25, 0.9)), // Deep space blue with transparency
+            BorderColor(Color::srgb(0.3, 0.6, 1.0)),             // Bright cyan/blue border
+            BorderRadius::all(Px(12.0)),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("LAUNCH GAME DATA"),
+                TextFont {
+                    font: asset_server.load("fonts/font1.otf"),
+                    font_size: 20.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.8, 0.9, 1.0)), // Slightly bluish white
+            ));
         });
 }
 
@@ -649,16 +690,30 @@ fn update_game_state_display(
     }
 }
 
-fn toggle_display(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Visibility, With<GameStateDisplayRoot>>,
+fn handle_start_game_button(
+    mut button_query: Query<
+        (&Interaction, &mut BackgroundColor, &mut BorderColor),
+        (Changed<Interaction>, With<StartGameButton>),
+    >,
+    mut display_query: Query<&mut Visibility, With<GameStateDisplayRoot>>,
 ) {
-    if keyboard.just_pressed(KeyCode::F3) {
-        if let Ok(mut visibility) = query.single_mut() {
-            *visibility = match *visibility {
-                Visibility::Hidden => Visibility::Visible,
-                _ => Visibility::Hidden,
-            };
+    for (interaction, mut bg_color, mut border_color) in &mut button_query {
+        match *interaction {
+            Interaction::Pressed => {
+                *bg_color = BackgroundColor(Color::srgba(0.1, 0.2, 0.4, 0.95)); // Brighter space blue when pressed
+                *border_color = BorderColor(Color::srgb(0.5, 0.8, 1.0)); // Brighter cyan border
+                if let Ok(mut visibility) = display_query.single_mut() {
+                    *visibility = Visibility::Visible;
+                }
+            }
+            Interaction::Hovered => {
+                *bg_color = BackgroundColor(Color::srgba(0.08, 0.15, 0.35, 0.95)); // Slightly brighter on hover
+                *border_color = BorderColor(Color::srgb(0.4, 0.7, 1.0)); // Glowing cyan border
+            }
+            Interaction::None => {
+                *bg_color = BackgroundColor(Color::srgba(0.05, 0.1, 0.25, 0.9)); // Default deep space blue
+                *border_color = BorderColor(Color::srgb(0.3, 0.6, 1.0)); // Default cyan border
+            }
         }
     }
 }
