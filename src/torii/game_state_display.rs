@@ -367,8 +367,8 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                 position_type: PositionType::Absolute,
                                 bottom: Px(40.0),
                                 left: Px(40.0),
-                                width: Px(120.0), // Wider to accommodate aspect ratio
-                                height: Px(50.0),  // Height based on aspect ratio ~2.37:1
+                                width: Px(192.0), // 1.6x the original width (120 * 1.6)
+                                height: Px(80.0),  // 1.6x the original height (50 * 1.6)
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
                                 ..default()
@@ -380,8 +380,8 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                 ImageNode::new(asset_server.load("Moonbag/Items/Moon Rock supply.png")),
                                 Node {
                                     position_type: PositionType::Absolute,
-                                    width: Px(120.0),
-                                    height: Px(50.0),
+                                    width: Px(192.0), // 1.6x the original width
+                                    height: Px(80.0),  // 1.6x the original height
                                     ..default()
                                 },
                             ));
@@ -389,10 +389,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 MoonRocksText,
                                 Text::new("490"),
-                                TextFont::from_font_size(24.0),
-                                TextColor(Color::srgb(0.8, 0.9, 1.0)),
+                                TextFont::from_font_size(32.0), // Keep same font size
+                                TextColor(Color::srgb(0.2, 0.4, 0.8)), // Much darker blue for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
+                                    left: Px(56.0), // Adjust for 1.6x size (35 * 1.6)
                                     align_self: AlignSelf::Center,
                                     ..default()
                                 },
@@ -406,8 +407,8 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                 position_type: PositionType::Absolute,
                                 bottom: Px(40.0),
                                 right: Px(40.0),
-                                width: Px(120.0), // Wider to accommodate aspect ratio
-                                height: Px(46.0),  // Height based on aspect ratio ~2.63:1
+                                width: Px(192.0), // 1.6x the original width (120 * 1.6)
+                                height: Px(74.0),  // 1.6x the original height (46 * 1.6)
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
                                 ..default()
@@ -419,8 +420,8 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                 ImageNode::new(asset_server.load("Moonbag/Items/Cheddah supply.png")),
                                 Node {
                                     position_type: PositionType::Absolute,
-                                    width: Px(120.0),
-                                    height: Px(46.0),
+                                    width: Px(192.0), // 1.6x the original width
+                                    height: Px(74.0),  // 1.6x the original height
                                     ..default()
                                 },
                             ));
@@ -428,10 +429,11 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                             parent.spawn((
                                 ShopInventoryText,
                                 Text::new("0"),
-                                TextFont::from_font_size(24.0),
-                                TextColor(Color::srgb(1.0, 0.9, 0.7)),
+                                TextFont::from_font_size(32.0), // Keep same font size
+                                TextColor(Color::srgb(0.8, 0.4, 0.1)), // Much darker orange/brown for visibility
                                 Node {
                                     position_type: PositionType::Absolute,
+                                    right: Px(56.0), // Adjust for 1.6x size (35 * 1.6)
                                     align_self: AlignSelf::Center,
                                     ..default()
                                 },
