@@ -16,6 +16,7 @@ impl Plugin for GameStateDisplayPlugin {
                 (
                     collect_available_players,
                     update_game_state_display,
+                    update_health_hearts,
                     handle_navigation_buttons,
                     handle_start_game_button,
                     handle_escape_button,
@@ -62,6 +63,11 @@ struct StartGameButton;
 
 #[derive(Component)]
 struct EscapeButton;
+
+#[derive(Component)]
+struct HealthHeart {
+    index: usize,
+}
 
 #[derive(Resource, Default)]
 struct PlayerNavigation {
@@ -119,38 +125,35 @@ fn spawn_game_state_display(mut commands: Commands) {
                 justify_content: JustifyContent::Center,
                 ..default()
             },
-            BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.8)),
+            BackgroundColor(Color::srgba(0.0, 0.0, 0.1, 0.9)),
             Visibility::Hidden,
             Pickable::IGNORE,
         ))
         .with_children(|parent| {
-            // Main display container
+            // Main game-style display container
             parent
                 .spawn((
                     GameStateDisplay,
                     Node {
-                        width: Percent(90.0),
-                        height: Percent(90.0),
-                        max_width: Px(1200.0),
-                        max_height: Px(800.0),
-                        flex_direction: FlexDirection::Column,
-                        padding: UiRect::all(Px(15.0)),
-                        row_gap: Px(10.0),
-                        overflow: Overflow::scroll_y(),
+                        width: Percent(100.0),
+                        height: Percent(100.0),
+                        position_type: PositionType::Relative,
                         ..default()
                     },
-                    BackgroundColor(Color::srgba(0.1, 0.1, 0.1, 0.95)),
-                    BorderRadius::all(Px(10.0)),
                 ))
                 .with_children(|parent| {
-                    // Navigation Header
+                    // Navigation Header (Top)
                     parent
                         .spawn((Node {
-                            width: Percent(100.0),
+                            position_type: PositionType::Absolute,
+                            top: Px(20.0),
+                            left: Percent(50.0),
+                            width: Px(400.0),
+                            height: Px(40.0),
+                            margin: UiRect::left(Px(-200.0)), // Center horizontally
                             flex_direction: FlexDirection::Row,
                             align_items: AlignItems::Center,
                             justify_content: JustifyContent::SpaceBetween,
-                            margin: UiRect::bottom(Px(10.0)),
                             ..default()
                         },))
                         .with_children(|parent| {
@@ -161,19 +164,21 @@ fn spawn_game_state_display(mut commands: Commands) {
                                     Button,
                                     Node {
                                         width: Px(80.0),
-                                        height: Px(30.0),
+                                        height: Px(35.0),
                                         align_items: AlignItems::Center,
                                         justify_content: JustifyContent::Center,
+                                        border: UiRect::all(Px(2.0)),
                                         ..default()
                                     },
-                                    BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
-                                    BorderRadius::all(Px(5.0)),
+                                    BackgroundColor(Color::srgba(0.1, 0.3, 0.6, 0.8)),
+                                    BorderColor(Color::srgb(0.3, 0.6, 1.0)),
+                                    BorderRadius::all(Px(8.0)),
                                 ))
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("< Prev"),
-                                        TextFont::from_font_size(12.0),
-                                        TextColor(Color::WHITE),
+                                        Text::new("< PREV"),
+                                        TextFont::from_font_size(14.0),
+                                        TextColor(Color::srgb(0.8, 0.9, 1.0)),
                                     ));
                                 });
 
@@ -181,8 +186,8 @@ fn spawn_game_state_display(mut commands: Commands) {
                             parent.spawn((
                                 PlayerInfoText,
                                 Text::new("No Players"),
-                                TextFont::from_font_size(16.0),
-                                TextColor(Color::WHITE),
+                                TextFont::from_font_size(18.0),
+                                TextColor(Color::srgb(0.9, 0.9, 1.0)),
                                 Node {
                                     align_self: AlignSelf::Center,
                                     ..default()
@@ -196,172 +201,235 @@ fn spawn_game_state_display(mut commands: Commands) {
                                     Button,
                                     Node {
                                         width: Px(80.0),
-                                        height: Px(30.0),
+                                        height: Px(35.0),
                                         align_items: AlignItems::Center,
                                         justify_content: JustifyContent::Center,
+                                        border: UiRect::all(Px(2.0)),
                                         ..default()
                                     },
-                                    BackgroundColor(Color::srgb(0.2, 0.2, 0.2)),
-                                    BorderRadius::all(Px(5.0)),
+                                    BackgroundColor(Color::srgba(0.1, 0.3, 0.6, 0.8)),
+                                    BorderColor(Color::srgb(0.3, 0.6, 1.0)),
+                                    BorderRadius::all(Px(8.0)),
                                 ))
                                 .with_children(|parent| {
                                     parent.spawn((
-                                        Text::new("Next >"),
-                                        TextFont::from_font_size(12.0),
-                                        TextColor(Color::WHITE),
+                                        Text::new("NEXT >"),
+                                        TextFont::from_font_size(14.0),
+                                        TextColor(Color::srgb(0.8, 0.9, 1.0)),
                                     ));
                                 });
                         });
 
-                    // Title and Escape Button Row
+                    // Escape Button (Top Right)
+                    parent
+                        .spawn((
+                            EscapeButton,
+                            Button,
+                            Node {
+                                position_type: PositionType::Absolute,
+                                top: Px(20.0),
+                                right: Px(20.0),
+                                width: Px(80.0),
+                                height: Px(35.0),
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                border: UiRect::all(Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(0.6, 0.1, 0.1, 0.9)),
+                            BorderColor(Color::srgb(1.0, 0.3, 0.3)),
+                            BorderRadius::all(Px(8.0)),
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                Text::new("ESC"),
+                                TextFont::from_font_size(14.0),
+                                TextColor(Color::srgb(1.0, 0.8, 0.8)),
+                            ));
+                        });
+
+                    // Level Display (Top Center)
                     parent
                         .spawn((Node {
-                            width: Percent(100.0),
-                            flex_direction: FlexDirection::Row,
+                            position_type: PositionType::Absolute,
+                            top: Px(80.0),
+                            right: Px(40.0),
+                            flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
-                            justify_content: JustifyContent::SpaceBetween,
-                            margin: UiRect::bottom(Px(15.0)),
                             ..default()
                         },))
                         .with_children(|parent| {
-                            // Empty space for balance
-                            parent.spawn((Node {
-                                width: Px(80.0),
-                                ..default()
-                            },));
-
-                            // Title
                             parent.spawn((
-                                Text::new("Player Game Data"),
+                                Text::new("Level 1"),
                                 TextFont::from_font_size(20.0),
-                                TextColor(Color::WHITE),
+                                TextColor(Color::srgb(0.9, 0.9, 0.4)),
+                            ));
+                            parent.spawn((
+                                GameCountersText,
+                                Text::new("0"),
+                                TextFont::from_font_size(32.0),
+                                TextColor(Color::srgb(0.9, 0.9, 0.4)),
+                            ));
+                        });
+
+                    // Central Moonbag
+                    parent
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            top: Percent(35.0),
+                            left: Percent(50.0),
+                            width: Px(300.0),
+                            height: Px(300.0),
+                            margin: UiRect {
+                                left: Px(-150.0), // Center horizontally
+                                top: Px(-50.0),   // Adjust vertical position
+                                ..default()
+                            },
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::Center,
+                            border: UiRect::all(Px(3.0)),
+                            ..default()
+                        },
+                        BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
+                        BorderColor(Color::srgb(0.4, 0.8, 1.0)),
+                        BorderRadius::all(Px(150.0)), // Make it circular
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                ActiveGamesText,
+                                Text::new("12"),
+                                TextFont::from_font_size(120.0),
+                                TextColor(Color::srgb(0.9, 0.3, 0.9)),
                                 Node {
                                     align_self: AlignSelf::Center,
                                     ..default()
                                 },
                             ));
-
-                            // Escape Button
-                            parent
-                                .spawn((
-                                    EscapeButton,
-                                    Button,
-                                    Node {
-                                        width: Px(80.0),
-                                        height: Px(30.0),
-                                        align_items: AlignItems::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    },
-                                    BackgroundColor(Color::srgba(0.3, 0.1, 0.1, 0.9)), // Dark red background
-                                    BorderColor(Color::srgb(0.8, 0.3, 0.3)),           // Red border
-                                    BorderRadius::all(Px(5.0)),
-                                ))
-                                .with_children(|parent| {
-                                    parent.spawn((
-                                        Text::new("ESC"),
-                                        TextFont::from_font_size(12.0),
-                                        TextColor(Color::srgb(1.0, 0.8, 0.8)), // Light red text
-                                    ));
-                                });
                         });
 
-                    // MoonRocks Section
-                    parent.spawn((
-                        Text::new("MoonRocks"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                    ));
-                    parent.spawn((
-                        MoonRocksText,
-                        Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        Node {
-                            margin: UiRect::bottom(Px(15.0)),
+                    // Health Hearts (Top Left)
+                    parent
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            top: Px(140.0),
+                            right: Px(40.0),
+                            flex_direction: FlexDirection::Column,
+                            align_items: AlignItems::Center,
+                            row_gap: Px(8.0),
+                            ..default()
+                        },))
+                        .with_children(|parent| {
+                            // Create 5 heart slots
+                            for i in 0..5 {
+                                parent.spawn((
+                                    HealthHeart { index: i },
+                                    Node {
+                                        width: Px(30.0),
+                                        height: Px(30.0),
+                                        border: UiRect::all(Px(2.0)),
+                                        ..default()
+                                    },
+                                    BackgroundColor(Color::srgb(0.3, 0.1, 0.1)), // Start dimmed
+                                    BorderColor(Color::srgb(0.5, 0.2, 0.2)),
+                                    BorderRadius::all(Px(15.0)),
+                                ));
+                            }
+                        });
+
+                    // MoonRocks Display (Bottom Left)
+                    parent
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            bottom: Px(40.0),
+                            left: Px(40.0),
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            column_gap: Px(10.0),
+                            padding: UiRect::all(Px(12.0)),
+                            border: UiRect::all(Px(2.0)),
                             ..default()
                         },
-                    ));
+                        BackgroundColor(Color::srgba(0.1, 0.2, 0.4, 0.8)),
+                        BorderColor(Color::srgb(0.4, 0.7, 1.0)),
+                        BorderRadius::all(Px(20.0)),
+                        ))
+                        .with_children(|parent| {
+                            // Crystal icon placeholder
+                            parent.spawn((
+                                Node {
+                                    width: Px(25.0),
+                                    height: Px(25.0),
+                                    ..default()
+                                },
+                                BackgroundColor(Color::srgb(0.5, 0.3, 0.9)),
+                                BorderRadius::all(Px(6.0)),
+                            ));
+                            parent.spawn((
+                                MoonRocksText,
+                                Text::new("490"),
+                                TextFont::from_font_size(24.0),
+                                TextColor(Color::srgb(0.8, 0.9, 1.0)),
+                            ));
+                        });
 
-                    // Last Game Section
-                    parent.spawn((
-                        Text::new("Last Game"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                    ));
-                    parent.spawn((
-                        ActiveGamesText,
-                        Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        Node {
-                            margin: UiRect::bottom(Px(15.0)),
+                    // Cheddah Display (Bottom Right)
+                    parent
+                        .spawn((Node {
+                            position_type: PositionType::Absolute,
+                            bottom: Px(40.0),
+                            right: Px(40.0),
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            column_gap: Px(10.0),
+                            padding: UiRect::all(Px(12.0)),
+                            border: UiRect::all(Px(2.0)),
                             ..default()
                         },
-                    ));
+                        BackgroundColor(Color::srgba(0.4, 0.2, 0.1, 0.8)),
+                        BorderColor(Color::srgb(1.0, 0.6, 0.3)),
+                        BorderRadius::all(Px(20.0)),
+                        ))
+                        .with_children(|parent| {
+                            // Cheese icon placeholder
+                            parent.spawn((
+                                Node {
+                                    width: Px(25.0),
+                                    height: Px(25.0),
+                                    ..default()
+                                },
+                                BackgroundColor(Color::srgb(1.0, 0.7, 0.2)),
+                                BorderRadius::all(Px(12.0)),
+                            ));
+                            parent.spawn((
+                                ShopInventoryText,
+                                Text::new("0"),
+                                TextFont::from_font_size(24.0),
+                                TextColor(Color::srgb(1.0, 0.9, 0.7)),
+                            ));
+                        });
 
-                    // Game Counters Section
-                    parent.spawn((
-                        Text::new("Game Counters"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                    ));
-                    parent.spawn((
-                        GameCountersText,
-                        Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        Node {
-                            margin: UiRect::bottom(Px(15.0)),
-                            ..default()
-                        },
-                    ));
-
-                    // Orb Bag Slots Section
-                    parent.spawn((
-                        Text::new("Last Game - Orb Bag Slots"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                    ));
+                    // Hidden text elements for data (not displayed but used for updates)
                     parent.spawn((
                         OrbBagSlotsText,
                         Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                        TextFont::from_font_size(1.0), // Hidden
+                        TextColor(Color::NONE),
                         Node {
-                            margin: UiRect::bottom(Px(15.0)),
+                            position_type: PositionType::Absolute,
+                            left: Px(-1000.0), // Off-screen
                             ..default()
                         },
-                    ));
-
-                    // Shop Inventory Section
-                    parent.spawn((
-                        Text::new("Last Game - Shop Inventory"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
-                    ));
-                    parent.spawn((
-                        ShopInventoryText,
-                        Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
-                        Node {
-                            margin: UiRect::bottom(Px(15.0)),
-                            ..default()
-                        },
-                    ));
-
-                    // Purchase History Section
-                    parent.spawn((
-                        Text::new("Last Game - Purchase History"),
-                        TextFont::from_font_size(16.0),
-                        TextColor(Color::srgb(0.8, 0.8, 0.8)),
                     ));
                     parent.spawn((
                         PurchaseHistoryText,
                         Text::new("Loading..."),
-                        TextFont::from_font_size(12.0),
-                        TextColor(Color::srgb(0.9, 0.9, 0.9)),
+                        TextFont::from_font_size(1.0), // Hidden
+                        TextColor(Color::NONE),
+                        Node {
+                            position_type: PositionType::Absolute,
+                            left: Px(-1000.0), // Off-screen
+                            ..default()
+                        },
                     ));
                 });
         });
@@ -567,170 +635,139 @@ fn update_game_state_display(
     let Some(current_player) = player_nav.get_current_player() else {
         // Clear all displays if no player selected
         if let Ok(mut text) = moon_rocks_query.single_mut() {
-            **text = "No player selected".to_string();
+            **text = "0".to_string();
         }
         if let Ok(mut text) = active_games_query.single_mut() {
-            **text = "No player selected".to_string();
+            **text = "0".to_string();
         }
         if let Ok(mut text) = game_counters_query.single_mut() {
-            **text = "No player selected".to_string();
-        }
-        if let Ok(mut text) = orb_bag_slots_query.single_mut() {
-            **text = "No player selected".to_string();
+            **text = "0".to_string();
         }
         if let Ok(mut text) = shop_inventory_query.single_mut() {
-            **text = "No player selected".to_string();
-        }
-        if let Ok(mut text) = purchase_history_query.single_mut() {
-            **text = "No player selected".to_string();
+            **text = "0".to_string();
         }
         return;
     };
 
-    // Update MoonRocks
+    // Update MoonRocks display (bottom left currency)
     if let Ok(mut text) = moon_rocks_query.single_mut() {
         if let Some(moon_rock) = game_state.moon_rocks.get(&current_player) {
-            **text = format!("Amount: {}", moon_rock.amount);
+            **text = moon_rock.amount.to_string();
         } else {
-            **text = "No MoonRocks data for this player".to_string();
+            **text = "0".to_string();
         }
     }
 
-    // Update Last Game (formerly Active Games)
+    // Update Points display (central moonbag number)
     if let Ok(mut text) = active_games_query.single_mut() {
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
             if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
-                **text = format!(
-                    "Game #{} | Health: {} | Points: {} | Level: {} | State: {:?}",
-                    last_game_id, game.health, game.points, game.current_level, game.game_state
-                );
+                **text = game.points.to_string();
             } else {
-                **text = format!("Last game #{} data not found", last_game_id);
+                **text = "0".to_string();
             }
         } else {
-            **text = "No games found for this player".to_string();
+            **text = "0".to_string();
         }
     }
 
-    // Update Game Counters
+    // Update Level display (top right)
     if let Ok(mut text) = game_counters_query.single_mut() {
-        if let Some(counter) = game_state.game_counters.get(&current_player) {
-            **text = format!("Next Game ID: {}", counter.next_game_id);
-        } else {
-            **text = "No game counter data for this player".to_string();
-        }
-    }
-
-    // Update Orb Bag Slots (Last Game Only)
-    if let Ok(mut text) = orb_bag_slots_query.single_mut() {
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
-            let mut slots: Vec<&super::types::OrbBagSlot> = game_state
-                .orb_bag_slots
-                .iter()
-                .filter_map(|((player, game_id, _), slot)| {
-                    if *player == current_player && *game_id == last_game_id {
-                        Some(slot)
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            // Sort by slot_index
-            slots.sort_by_key(|slot| slot.slot_index);
-
-            let mut content = String::new();
-            for slot in slots {
-                let status = if slot.is_active { "Active" } else { "Inactive" };
-                content.push_str(&format!(
-                    "Slot {}: {:?} ({})\n",
-                    slot.slot_index, slot.orb_type, status
-                ));
+            if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+                **text = game.current_level.to_string();
+            } else {
+                **text = "1".to_string();
             }
-            if content.is_empty() {
-                content = format!("No orb bag slots for last game #{}", last_game_id);
-            }
-            **text = content;
         } else {
-            **text = "No games found for this player".to_string();
+            **text = "1".to_string();
         }
     }
 
-    // Update Shop Inventory (Last Game Only)
+    // Update Cheddah display (bottom right currency)
     if let Ok(mut text) = shop_inventory_query.single_mut() {
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
-            let mut items_by_level: std::collections::HashMap<
-                u8,
-                Vec<&super::types::ShopInventory>,
-            > = std::collections::HashMap::new();
-            for ((player, game_id, level, _), shop) in game_state.shop_inventory.iter() {
-                if *player == current_player && *game_id == last_game_id {
-                    items_by_level.entry(*level).or_default().push(shop);
-                }
+            if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+                **text = game.cheddah.to_string();
+            } else {
+                **text = "0".to_string();
             }
-
-            // Convert to sorted vector by level
-            let mut sorted_levels: Vec<(u8, Vec<&super::types::ShopInventory>)> =
-                items_by_level.into_iter().collect();
-            sorted_levels.sort_by_key(|(level, _)| *level);
-
-            let mut content = String::new();
-            for (level, mut items) in sorted_levels {
-                // Sort items by slot_index within each level
-                items.sort_by_key(|item| item.slot_index);
-                content.push_str(&format!("Level {} ({} items):\n", level, items.len()));
-                for item in items {
-                    content.push_str(&format!(
-                        "  Slot {}: {:?} - {}🧀 ({:?})\n",
-                        item.slot_index, item.orb_type, item.base_price, item.rarity
-                    ));
-                }
-            }
-            if content.is_empty() {
-                content = format!("No shop inventory for last game #{}", last_game_id);
-            }
-            **text = content;
         } else {
-            **text = "No games found for this player".to_string();
+            **text = "0".to_string();
         }
     }
 
-    // Update Purchase History (Last Game Only)
+    // Hidden elements - still updated for potential future use
+    if let Ok(mut text) = orb_bag_slots_query.single_mut() {
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            let slots_count = game_state
+                .orb_bag_slots
+                .iter()
+                .filter(|((player, game_id, _), _)| {
+                    *player == current_player && *game_id == last_game_id
+                })
+                .count();
+            **text = format!("Orb slots: {}", slots_count);
+        } else {
+            **text = "No orb slots".to_string();
+        }
+    }
+
     if let Ok(mut text) = purchase_history_query.single_mut() {
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
-            let mut purchases: Vec<&super::types::PurchaseHistory> = game_state
+            let total_purchases: u32 = game_state
                 .purchase_history
                 .iter()
                 .filter_map(|((player, game_id, _), history)| {
                     if *player == current_player && *game_id == last_game_id {
-                        Some(history)
+                        Some(history.purchase_count)
                     } else {
                         None
                     }
                 })
-                .collect();
-
-            if !purchases.is_empty() {
-                let mut content = String::new();
-                // Sort by orb type for consistent display
-                purchases.sort_by_key(|p| format!("{:?}", p.orb_type));
-
-                let total_purchases: u32 = purchases.iter().map(|p| p.purchase_count).sum();
-                content.push_str(&format!("Total purchases: {}\n", total_purchases));
-                content.push_str("Purchases by orb type:\n");
-
-                for purchase in purchases {
-                    content.push_str(&format!(
-                        "  {:?}: {} times\n",
-                        purchase.orb_type, purchase.purchase_count
-                    ));
-                }
-                **text = content;
-            } else {
-                **text = format!("No purchase history for last game #{}", last_game_id);
-            }
+                .sum();
+            **text = format!("Total purchases: {}", total_purchases);
         } else {
-            **text = "No games found for this player".to_string();
+            **text = "No purchases".to_string();
+        }
+    }
+}
+
+fn update_health_hearts(
+    game_state: Option<Res<GameState>>,
+    player_nav: Res<PlayerNavigation>,
+    mut hearts_query: Query<(&HealthHeart, &mut BackgroundColor, &mut BorderColor)>,
+) {
+    let Some(game_state) = game_state else { return };
+    let Some(current_player) = player_nav.get_current_player() else { 
+        // No player selected - dim all hearts
+        for (_, mut bg_color, mut border_color) in &mut hearts_query {
+            *bg_color = BackgroundColor(Color::srgb(0.3, 0.1, 0.1));
+            *border_color = BorderColor(Color::srgb(0.5, 0.2, 0.2));
+        }
+        return; 
+    };
+
+    let current_health = if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+        if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+            game.health as usize
+        } else {
+            5 // Default health
+        }
+    } else {
+        5 // Default health
+    };
+
+    // Update heart appearances based on current health
+    for (heart, mut bg_color, mut border_color) in &mut hearts_query {
+        if heart.index < current_health {
+            // Active heart - bright red
+            *bg_color = BackgroundColor(Color::srgb(0.9, 0.2, 0.3));
+            *border_color = BorderColor(Color::srgb(1.0, 0.4, 0.5));
+        } else {
+            // Inactive heart - dimmed
+            *bg_color = BackgroundColor(Color::srgb(0.3, 0.1, 0.1));
+            *border_color = BorderColor(Color::srgb(0.5, 0.2, 0.2));
         }
     }
 }
