@@ -692,18 +692,27 @@ fn update_game_state_display(
 
 fn handle_start_game_button(
     mut button_query: Query<
-        (&Interaction, &mut BackgroundColor, &mut BorderColor),
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &mut Visibility,
+        ),
         (Changed<Interaction>, With<StartGameButton>),
     >,
-    mut display_query: Query<&mut Visibility, With<GameStateDisplayRoot>>,
+    mut display_query: Query<
+        &mut Visibility,
+        (With<GameStateDisplayRoot>, Without<StartGameButton>),
+    >,
 ) {
-    for (interaction, mut bg_color, mut border_color) in &mut button_query {
+    for (interaction, mut bg_color, mut border_color, mut button_visibility) in &mut button_query {
         match *interaction {
             Interaction::Pressed => {
                 *bg_color = BackgroundColor(Color::srgba(0.1, 0.2, 0.4, 0.95)); // Brighter space blue when pressed
                 *border_color = BorderColor(Color::srgb(0.5, 0.8, 1.0)); // Brighter cyan border
                 if let Ok(mut visibility) = display_query.single_mut() {
                     *visibility = Visibility::Visible;
+                    *button_visibility = Visibility::Hidden; // Hide the button when UI is shown
                 }
             }
             Interaction::Hovered => {
