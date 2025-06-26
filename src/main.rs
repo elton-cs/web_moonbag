@@ -5,6 +5,7 @@
 
 mod asset_tracking;
 mod audio;
+mod background;
 mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -54,6 +55,7 @@ impl Plugin for AppPlugin {
             // menus::plugin,
             // screens::plugin,
             // theme::plugin,
+            background::plugin,
             torii::plugin,
         ));
 
