@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
-This project uses Bevy CLI for building and running:
+This project is primarily developed for web deployment using Bevy CLI:
 
-- `bevy run` - Run native development build
+**Primary Commands (Web-focused):**
+- `bevy run web` - Run web development build (primary development command)
+- `bevy run web --release` - Run web release build for production
+- `bevy run` - Run native development build (for debugging when needed)
 - `bevy run --release` - Run native release build
-- `bevy run web` - Run web development build  
-- `bevy run web --release` - Run web release build
 
-For testing and quality checks:
+**Quality Checks:**
 - `cargo test` - Run tests
 - `cargo fmt` - Format code
 - `cargo clippy` - Run lints
@@ -28,11 +29,13 @@ This is a Bevy 0.16 game with modular plugin architecture supporting both native
 - **Audio**: Background music and SFX with volume controls
 
 ### Module Organization
-- `src/demo/` - Gameplay mechanics (player, movement, animation, level)
-- `src/screens/` - Game states and transitions
-- `src/menus/` - UI screens (main menu, pause, settings, credits)
-- `src/theme/` - UI theming and widgets
-- `src/dev_tools.rs` - Development utilities (conditional compilation)
+- `src/demo/` - Gameplay mechanics (player, movement, animation, level) - Currently disabled
+- `src/screens/` - Game states and transitions - Currently disabled
+- `src/menus/` - UI screens (main menu, pause, settings, credits) - Currently disabled
+- `src/theme/` - UI theming and widgets - Currently disabled
+- `src/dev_tools.rs` - Development utilities (conditional compilation) - Currently disabled
+- `src/torii/` - Blockchain integration using Torii client for Dojo/Starknet (actively used)
+- `src/background.rs` - Background rendering system using sprite-based backgrounds
 
 ### Key Patterns
 - **ECS**: Component-based entities with system ordering via `AppSystems`
@@ -45,9 +48,31 @@ This is a Bevy 0.16 game with modular plugin architecture supporting both native
 - Uses conditional compilation for platform-specific features
 - Logging optimized out in release builds for performance
 
+## Current Project State
+
+**Active Plugins:**
+- `background::plugin` - Renders starbg.png as background sprite
+- `torii::plugin` - Blockchain integration with Dojo/Starknet
+
+**Disabled Plugins (commented out in main.rs):**
+- Most game features are currently disabled during development
+- To enable features, uncomment the relevant plugin in `src/main.rs`
+
 ## Development Notes
 
+- Primary development target is web (`wasm32-unknown-unknown`)
 - Default feature is `dev_native` with dynamic linking and file watching
-- Fast linker configs available in `.cargo/config_fast_builds.toml`
-- Linux requires: `libasound2-dev`, `libudev-dev`, `libwayland-dev`
-- Web target: `wasm32-unknown-unknown`
+- Web builds use `bevy run web` command with automatic profile selection
+- Asset meta checking disabled for web builds to prevent panics
+- Torii client requires Tokio runtime context (may cause panics if not properly configured)
+
+## Dependencies
+
+**Blockchain Integration:**
+- `torii-client` and `torii-proto` for Dojo/Starknet integration
+- `dojo-types` for blockchain type definitions
+- `starknet` for Starknet network interaction
+
+**Web Support:**
+- `wasm-bindgen` and `wasm-bindgen-futures` for WebAssembly
+- `web-sys` for browser API access
