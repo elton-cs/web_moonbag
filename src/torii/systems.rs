@@ -8,9 +8,9 @@ use std::sync::Arc;
 use torii_client::Client;
 use torii_proto::Query;
 
+use super::game_state::GameState;
 use super::resources::*;
 use super::types::{DojoModel, convert_dojo_struct};
-use super::game_state::GameState;
 
 pub async fn create_torii_client() -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
     let torii_url = "https://api.cartridge.gg/x/moonbagvibes/torii";
@@ -38,13 +38,13 @@ pub fn poll_torii_client_task(mut commands: Commands, task_res: Option<ResMut<To
                     commands.insert_resource(ToriiClient {
                         client: client_arc.clone(),
                     });
-                    
+
                     // Initialize game state
                     commands.insert_resource(GameState::new());
 
                     // Start fetching initial entities
                     fetch_initial_entities(&mut commands, client_arc.clone());
-                    
+
                     start_entity_stream(&mut commands, client_arc);
                 }
                 Err(e) => {
@@ -145,7 +145,7 @@ pub fn poll_entity_stream_task(
                     state.update_from_model(model);
                 }
             }
-            
+
             event_writer.write(event);
         }
     }
@@ -167,10 +167,10 @@ pub async fn fetch_all_entities(
     client: Arc<Client>,
 ) -> Result<Vec<DojoModel>, Box<dyn std::error::Error + Send + Sync>> {
     info!("Fetching all entities from Torii...");
-    
+
     let mut all_models = Vec::new();
     let mut cursor = None;
-    
+
     loop {
         // Create a query to fetch all entities
         let query = Query {
@@ -185,9 +185,9 @@ pub async fn fetch_all_entities(
             models: vec![],
             historical: false,
         };
-        
+
         let page = client.entities(query).await?;
-        
+
         // Process entities from this page
         for entity in &page.items {
             for model in &entity.models {
@@ -201,15 +201,15 @@ pub async fn fetch_all_entities(
                 }
             }
         }
-        
+
         // Check if we need to fetch more pages
         if page.next_cursor.is_none() {
             break;
         }
-        
+
         cursor = page.next_cursor;
     }
-    
+
     info!("Fetched {} models from initial query", all_models.len());
     Ok(all_models)
 }
@@ -224,12 +224,12 @@ pub fn poll_initial_fetch_task(
             match result {
                 Ok(models) => {
                     info!("Initial entity fetch completed, updating game state...");
-                    
+
                     // Update game state with all fetched models
                     for model in models {
                         game_state.update_from_model(&model);
                     }
-                    
+
                     info!("Game state initialized with:");
                     info!("  - {} MoonRocks entries", game_state.moon_rocks.len());
                     info!("  - {} Games", game_state.games.len());
@@ -237,8 +237,14 @@ pub fn poll_initial_fetch_task(
                     info!("  - {} ActiveGames", game_state.active_games.len());
                     info!("  - {} OrbBagSlots", game_state.orb_bag_slots.len());
                     info!("  - {} DrawnOrbs", game_state.drawn_orbs.len());
-                    info!("  - {} ShopInventory items", game_state.shop_inventory.len());
-                    info!("  - {} PurchaseHistory entries", game_state.purchase_history.len());
+                    info!(
+                        "  - {} ShopInventory items",
+                        game_state.shop_inventory.len()
+                    );
+                    info!(
+                        "  - {} PurchaseHistory entries",
+                        game_state.purchase_history.len()
+                    );
                 }
                 Err(e) => {
                     error!("Failed to fetch initial entities: {}", e);

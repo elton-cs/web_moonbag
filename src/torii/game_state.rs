@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use std::collections::HashMap;
 use starknet::core::types::Felt;
+use std::collections::HashMap;
 
 use super::types::*;
 
@@ -24,7 +24,8 @@ impl GameState {
     pub fn update_from_model(&mut self, model: &DojoModel) {
         match model {
             DojoModel::MoonRocks(moon_rocks) => {
-                self.moon_rocks.insert(moon_rocks.player, moon_rocks.clone());
+                self.moon_rocks
+                    .insert(moon_rocks.player, moon_rocks.clone());
             }
             DojoModel::Game(game) => {
                 self.games.insert((game.player, game.game_id), game.clone());
@@ -36,10 +37,8 @@ impl GameState {
                 self.active_games.insert(active.player, active.clone());
             }
             DojoModel::OrbBagSlot(slot) => {
-                self.orb_bag_slots.insert(
-                    (slot.player, slot.game_id, slot.slot_index),
-                    slot.clone(),
-                );
+                self.orb_bag_slots
+                    .insert((slot.player, slot.game_id, slot.slot_index), slot.clone());
             }
             DojoModel::DrawnOrb(drawn) => {
                 self.drawn_orbs.insert(
@@ -102,7 +101,12 @@ impl GameState {
             .collect()
     }
 
-    pub fn get_shop_inventory(&self, player: &Felt, game_id: u32, level: u8) -> Vec<&ShopInventory> {
+    pub fn get_shop_inventory(
+        &self,
+        player: &Felt,
+        game_id: u32,
+        level: u8,
+    ) -> Vec<&ShopInventory> {
         self.shop_inventory
             .iter()
             .filter_map(|((p, g, l, _), shop)| {

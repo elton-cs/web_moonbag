@@ -4,7 +4,7 @@ use bevy::{
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(Startup, spawn_background);
+    app.add_systems(Startup, (spawn_background, spawn_moon).chain());
     app.init_resource::<BackgroundAssets>();
 }
 
@@ -13,6 +13,8 @@ pub(super) fn plugin(app: &mut App) {
 pub struct BackgroundAssets {
     #[dependency]
     starbg: Handle<Image>,
+    #[dependency]
+    moon: Handle<Scene>,
 }
 
 impl FromWorld for BackgroundAssets {
@@ -25,6 +27,7 @@ impl FromWorld for BackgroundAssets {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
+            moon: assets.load("models/moon.glb#Scene0"),
         }
     }
 }
@@ -36,6 +39,16 @@ fn spawn_background(mut commands: Commands, background_assets: Res<BackgroundAss
             image: background_assets.starbg.clone(),
             ..default()
         },
-        Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)), // Behind other sprites
+        Transform::from_translation(Vec3::new(0.0, 0.0, -2.0)) // Far behind in 3D space
+            .with_scale(Vec3::splat(1.0)),
+    ));
+}
+
+fn spawn_moon(mut commands: Commands, background_assets: Res<BackgroundAssets>) {
+    commands.spawn((
+        Name::new("Moon"),
+        SceneRoot(background_assets.moon.clone()),
+        Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)) // Centered, in front of background
+            .with_scale(Vec3::splat(1.0)),
     ));
 }
