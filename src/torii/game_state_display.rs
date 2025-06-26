@@ -41,6 +41,9 @@ struct ActiveGamesText;
 struct GameCountersText;
 
 #[derive(Component)]
+struct LevelText;
+
+#[derive(Component)]
 struct OrbBagSlotsText;
 
 #[derive(Component)]
@@ -67,6 +70,25 @@ struct EscapeButton;
 #[derive(Component)]
 struct HealthHeart {
     index: usize,
+}
+
+/// Milestone system for tracking level progression
+struct Milestone;
+
+impl Milestone {
+    /// Get the milestone target for a given level (0-indexed)
+    fn get_milestone_for_level(level: u8) -> u32 {
+        match level {
+            0 => 12,  // Level 1
+            1 => 18,  // Level 2
+            2 => 28,  // Level 3
+            3 => 44,  // Level 4
+            4 => 66,  // Level 5
+            5 => 94,  // Level 6
+            6 => 130, // Level 7
+            _ => 0,   // Unknown/invalid levels
+        }
+    }
 }
 
 #[derive(Resource, Default)]
@@ -260,14 +282,15 @@ fn spawn_game_state_display(mut commands: Commands) {
                         },))
                         .with_children(|parent| {
                             parent.spawn((
+                                LevelText,
                                 Text::new("Level 1"),
-                                TextFont::from_font_size(20.0),
-                                TextColor(Color::srgb(0.9, 0.9, 0.4)),
+                                TextFont::from_font_size(16.0),
+                                TextColor(Color::srgb(0.7, 0.7, 0.3)),
                             ));
                             parent.spawn((
                                 GameCountersText,
-                                Text::new("0"),
-                                TextFont::from_font_size(32.0),
+                                Text::new("0"), // This will show milestone instead of level
+                                TextFont::from_font_size(48.0), // Make it larger and more prominent
                                 TextColor(Color::srgb(0.9, 0.9, 0.4)),
                             ));
                         });
@@ -593,12 +616,21 @@ fn update_game_state_display(
     player_nav: Res<PlayerNavigation>,
     mut moon_rocks_query: Query<&mut Text, With<MoonRocksText>>,
     mut active_games_query: Query<&mut Text, (With<ActiveGamesText>, Without<MoonRocksText>)>,
+    mut level_query: Query<
+        &mut Text,
+        (
+            With<LevelText>,
+            Without<MoonRocksText>,
+            Without<ActiveGamesText>,
+        ),
+    >,
     mut game_counters_query: Query<
         &mut Text,
         (
             With<GameCountersText>,
             Without<MoonRocksText>,
             Without<ActiveGamesText>,
+            Without<LevelText>,
         ),
     >,
     mut orb_bag_slots_query: Query<
@@ -608,6 +640,7 @@ fn update_game_state_display(
             Without<MoonRocksText>,
             Without<ActiveGamesText>,
             Without<GameCountersText>,
+            Without<LevelText>,
         ),
     >,
     mut shop_inventory_query: Query<
@@ -618,6 +651,7 @@ fn update_game_state_display(
             Without<ActiveGamesText>,
             Without<GameCountersText>,
             Without<OrbBagSlotsText>,
+            Without<LevelText>,
         ),
     >,
     mut purchase_history_query: Query<
@@ -629,6 +663,7 @@ fn update_game_state_display(
             Without<GameCountersText>,
             Without<OrbBagSlotsText>,
             Without<ShopInventoryText>,
+            Without<LevelText>,
         ),
     >,
 ) {
@@ -641,8 +676,11 @@ fn update_game_state_display(
         if let Ok(mut text) = active_games_query.single_mut() {
             **text = "0".to_string();
         }
+        if let Ok(mut text) = level_query.single_mut() {
+            **text = "Level 1".to_string();
+        }
         if let Ok(mut text) = game_counters_query.single_mut() {
-            **text = "0".to_string();
+            **text = Milestone::get_milestone_for_level(0).to_string(); // Default to level 1 milestone (12)
         }
         if let Ok(mut text) = shop_inventory_query.single_mut() {
             **text = "0".to_string();
@@ -672,16 +710,31 @@ fn update_game_state_display(
         }
     }
 
-    // Update Level display (top right)
+    // Update Level text (top right, small label)
+    if let Ok(mut text) = level_query.single_mut() {
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+                **text = format!("Level {}", game.current_level);
+            } else {
+                **text = "Level 1".to_string();
+            }
+        } else {
+            **text = "Level 1".to_string();
+        }
+    }
+
+    // Update Milestone display (top right, large number)
     if let Ok(mut text) = game_counters_query.single_mut() {
         if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
             if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
-                **text = game.current_level.to_string();
+                // Get milestone target for current level (subtract 1 since levels are 1-indexed in display but 0-indexed in milestone logic)
+                let milestone = Milestone::get_milestone_for_level(game.current_level.saturating_sub(1));
+                **text = milestone.to_string();
             } else {
-                **text = "1".to_string();
+                **text = Milestone::get_milestone_for_level(0).to_string(); // Default to level 1 milestone (12)
             }
         } else {
-            **text = "1".to_string();
+            **text = Milestone::get_milestone_for_level(0).to_string(); // Default to level 1 milestone (12)
         }
     }
 
