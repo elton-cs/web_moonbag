@@ -307,12 +307,13 @@ fn spawn_game_state_display(mut commands: Commands) {
                             ));
                         });
 
-                    // Health Hearts (Top Right, below level display)
+                    // Health Hearts (Center Right)
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Px(200.0), // Moved down below level display
+                            top: Percent(50.0), // Center vertically
                             right: Px(40.0),
+                            margin: UiRect::top(Px(-75.0)), // Offset to truly center (half of 5 hearts * 30px + gaps)
                             flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
                             row_gap: Px(8.0),
