@@ -18,6 +18,7 @@ impl Plugin for GameStateDisplayPlugin {
                     update_game_state_display,
                     handle_navigation_buttons,
                     handle_start_game_button,
+                    handle_escape_button,
                 ),
             );
     }
@@ -58,6 +59,9 @@ struct PlayerInfoText;
 
 #[derive(Component)]
 struct StartGameButton;
+
+#[derive(Component)]
+struct EscapeButton;
 
 #[derive(Resource, Default)]
 struct PlayerNavigation {
@@ -209,17 +213,58 @@ fn spawn_game_state_display(mut commands: Commands) {
                                 });
                         });
 
-                    // Title
-                    parent.spawn((
-                        Text::new("Player Game Data"),
-                        TextFont::from_font_size(20.0),
-                        TextColor(Color::WHITE),
-                        Node {
-                            align_self: AlignSelf::Center,
+                    // Title and Escape Button Row
+                    parent
+                        .spawn((Node {
+                            width: Percent(100.0),
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            justify_content: JustifyContent::SpaceBetween,
                             margin: UiRect::bottom(Px(15.0)),
                             ..default()
-                        },
-                    ));
+                        },))
+                        .with_children(|parent| {
+                            // Empty space for balance
+                            parent.spawn((Node {
+                                width: Px(80.0),
+                                ..default()
+                            },));
+
+                            // Title
+                            parent.spawn((
+                                Text::new("Player Game Data"),
+                                TextFont::from_font_size(20.0),
+                                TextColor(Color::WHITE),
+                                Node {
+                                    align_self: AlignSelf::Center,
+                                    ..default()
+                                },
+                            ));
+
+                            // Escape Button
+                            parent
+                                .spawn((
+                                    EscapeButton,
+                                    Button,
+                                    Node {
+                                        width: Px(80.0),
+                                        height: Px(30.0),
+                                        align_items: AlignItems::Center,
+                                        justify_content: JustifyContent::Center,
+                                        ..default()
+                                    },
+                                    BackgroundColor(Color::srgba(0.3, 0.1, 0.1, 0.9)), // Dark red background
+                                    BorderColor(Color::srgb(0.8, 0.3, 0.3)),           // Red border
+                                    BorderRadius::all(Px(5.0)),
+                                ))
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        Text::new("ESC"),
+                                        TextFont::from_font_size(12.0),
+                                        TextColor(Color::srgb(1.0, 0.8, 0.8)), // Light red text
+                                    ));
+                                });
+                        });
 
                     // MoonRocks Section
                     parent.spawn((
@@ -722,6 +767,49 @@ fn handle_start_game_button(
             Interaction::None => {
                 *bg_color = BackgroundColor(Color::srgba(0.05, 0.1, 0.25, 0.9)); // Default deep space blue
                 *border_color = BorderColor(Color::srgb(0.3, 0.6, 1.0)); // Default cyan border
+            }
+        }
+    }
+}
+
+fn handle_escape_button(
+    mut escape_button_query: Query<
+        (&Interaction, &mut BackgroundColor, &mut BorderColor),
+        (Changed<Interaction>, With<EscapeButton>),
+    >,
+    mut display_query: Query<&mut Visibility, (With<GameStateDisplayRoot>, Without<EscapeButton>)>,
+    mut start_button_query: Query<
+        &mut Visibility,
+        (
+            With<StartGameButton>,
+            Without<GameStateDisplayRoot>,
+            Without<EscapeButton>,
+        ),
+    >,
+) {
+    for (interaction, mut bg_color, mut border_color) in &mut escape_button_query {
+        match *interaction {
+            Interaction::Pressed => {
+                *bg_color = BackgroundColor(Color::srgba(0.5, 0.2, 0.2, 0.95)); // Brighter red when pressed
+                *border_color = BorderColor(Color::srgb(1.0, 0.5, 0.5)); // Brighter red border
+
+                // Hide the game state UI
+                if let Ok(mut display_visibility) = display_query.single_mut() {
+                    *display_visibility = Visibility::Hidden;
+                }
+
+                // Show the start game button again
+                if let Ok(mut start_button_visibility) = start_button_query.single_mut() {
+                    *start_button_visibility = Visibility::Visible;
+                }
+            }
+            Interaction::Hovered => {
+                *bg_color = BackgroundColor(Color::srgba(0.4, 0.15, 0.15, 0.95)); // Slightly brighter red on hover
+                *border_color = BorderColor(Color::srgb(0.9, 0.4, 0.4)); // Glowing red border
+            }
+            Interaction::None => {
+                *bg_color = BackgroundColor(Color::srgba(0.3, 0.1, 0.1, 0.9)); // Default dark red
+                *border_color = BorderColor(Color::srgb(0.8, 0.3, 0.3)); // Default red border
             }
         }
     }
