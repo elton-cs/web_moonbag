@@ -1,9 +1,12 @@
+mod game_state;
 mod resources;
 mod systems;
 mod types;
 use bevy::prelude::*;
+pub use game_state::GameState;
 pub use resources::*;
 pub use systems::*;
+pub use types::*;
 
 pub struct ToriiPlugin;
 
@@ -15,6 +18,7 @@ impl Plugin for ToriiPlugin {
                 Update,
                 (
                     poll_torii_client_task,
+                    poll_initial_fetch_task,
                     poll_entity_stream_task,
                     log_entity_updates,
                 ),

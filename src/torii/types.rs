@@ -39,7 +39,7 @@ pub struct ActiveGame {
     pub game_id: u32,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 pub enum OrbType {
     SingleBomb,
     DoubleBomb,

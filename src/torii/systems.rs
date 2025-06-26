@@ -6,9 +6,11 @@ use crossbeam_channel::Sender;
 use starknet::core::types::Felt;
 use std::sync::Arc;
 use torii_client::Client;
+use torii_proto::Query;
 
 use super::resources::*;
 use super::types::{DojoModel, convert_dojo_struct};
+use super::game_state::GameState;
 
 pub async fn create_torii_client() -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
     let torii_url = "https://api.cartridge.gg/x/moonbagvibes/torii";
@@ -36,7 +38,13 @@ pub fn poll_torii_client_task(mut commands: Commands, task_res: Option<ResMut<To
                     commands.insert_resource(ToriiClient {
                         client: client_arc.clone(),
                     });
+                    
+                    // Initialize game state
+                    commands.insert_resource(GameState::new());
 
+                    // Start fetching initial entities
+                    fetch_initial_entities(&mut commands, client_arc.clone());
+                    
                     start_entity_stream(&mut commands, client_arc);
                 }
                 Err(e) => {
@@ -127,10 +135,116 @@ pub async fn run_persistent_entity_stream(client: Arc<Client>, sender: Sender<En
 pub fn poll_entity_stream_task(
     receiver_res: Option<Res<EntityStreamReceiver>>,
     mut event_writer: EventWriter<EntityUpdateEvent>,
+    mut game_state: Option<ResMut<GameState>>,
 ) {
     if let Some(receiver_res) = receiver_res {
         while let Ok(event) = receiver_res.0.try_recv() {
+            // Update game state if available
+            if let Some(ref mut state) = game_state {
+                if let Some(ref model) = event.model {
+                    state.update_from_model(model);
+                }
+            }
+            
             event_writer.write(event);
+        }
+    }
+}
+
+fn fetch_initial_entities(commands: &mut Commands, client_arc: Arc<Client>) {
+    info!("Starting initial entity fetch...");
+    let task_pool = IoTaskPool::get();
+    let task = task_pool.spawn(fetch_all_entities(client_arc));
+    commands.insert_resource(InitialFetchTask(task));
+}
+
+#[derive(Resource)]
+pub(crate) struct InitialFetchTask(
+    pub(crate) bevy::tasks::Task<Result<Vec<DojoModel>, Box<dyn std::error::Error + Send + Sync>>>,
+);
+
+pub async fn fetch_all_entities(
+    client: Arc<Client>,
+) -> Result<Vec<DojoModel>, Box<dyn std::error::Error + Send + Sync>> {
+    info!("Fetching all entities from Torii...");
+    
+    let mut all_models = Vec::new();
+    let mut cursor = None;
+    
+    loop {
+        // Create a query to fetch all entities
+        let query = Query {
+            clause: None,
+            pagination: torii_proto::Pagination {
+                cursor: cursor.clone(),
+                limit: 100,
+                direction: torii_proto::PaginationDirection::Forward,
+                order_by: vec![],
+            },
+            no_hashed_keys: false,
+            models: vec![],
+            historical: false,
+        };
+        
+        let page = client.entities(query).await?;
+        
+        // Process entities from this page
+        for entity in &page.items {
+            for model in &entity.models {
+                match convert_dojo_struct(model) {
+                    Ok(converted_model) => {
+                        all_models.push(converted_model);
+                    }
+                    Err(e) => {
+                        warn!("Failed to convert model {}: {:?}", model.name, e);
+                    }
+                }
+            }
+        }
+        
+        // Check if we need to fetch more pages
+        if page.next_cursor.is_none() {
+            break;
+        }
+        
+        cursor = page.next_cursor;
+    }
+    
+    info!("Fetched {} models from initial query", all_models.len());
+    Ok(all_models)
+}
+
+pub fn poll_initial_fetch_task(
+    mut commands: Commands,
+    task_res: Option<ResMut<InitialFetchTask>>,
+    game_state: Option<ResMut<GameState>>,
+) {
+    if let (Some(mut task_res), Some(mut game_state)) = (task_res, game_state) {
+        if let Some(result) = bevy::tasks::block_on(bevy::tasks::poll_once(&mut task_res.0)) {
+            match result {
+                Ok(models) => {
+                    info!("Initial entity fetch completed, updating game state...");
+                    
+                    // Update game state with all fetched models
+                    for model in models {
+                        game_state.update_from_model(&model);
+                    }
+                    
+                    info!("Game state initialized with:");
+                    info!("  - {} MoonRocks entries", game_state.moon_rocks.len());
+                    info!("  - {} Games", game_state.games.len());
+                    info!("  - {} GameCounters", game_state.game_counters.len());
+                    info!("  - {} ActiveGames", game_state.active_games.len());
+                    info!("  - {} OrbBagSlots", game_state.orb_bag_slots.len());
+                    info!("  - {} DrawnOrbs", game_state.drawn_orbs.len());
+                    info!("  - {} ShopInventory items", game_state.shop_inventory.len());
+                    info!("  - {} PurchaseHistory entries", game_state.purchase_history.len());
+                }
+                Err(e) => {
+                    error!("Failed to fetch initial entities: {}", e);
+                }
+            }
+            commands.remove_resource::<InitialFetchTask>();
         }
     }
 }
