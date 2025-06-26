@@ -276,13 +276,13 @@ fn spawn_game_state_display(mut commands: Commands) {
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Percent(35.0),
+                            top: Percent(50.0), // Center vertically
                             left: Percent(50.0),
                             width: Px(300.0),
                             height: Px(300.0),
                             margin: UiRect {
                                 left: Px(-150.0), // Center horizontally
-                                top: Px(-50.0),   // Adjust vertical position
+                                top: Px(-150.0),  // Center vertically (half of height)
                                 ..default()
                             },
                             align_items: AlignItems::Center,
@@ -307,13 +307,13 @@ fn spawn_game_state_display(mut commands: Commands) {
                             ));
                         });
 
-                    // Health Hearts (Center Right)
+                    // Health Hearts (Center Right, aligned with moonbag center)
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Percent(50.0), // Center vertically
+                            top: Percent(50.0), // Center vertically to match moonbag
                             right: Px(40.0),
-                            margin: UiRect::top(Px(-75.0)), // Offset to truly center (half of 5 hearts * 30px + gaps)
+                            margin: UiRect::top(Px(-80.0)), // Offset to center the 5 hearts stack (5*30 + 4*8 gaps = 182px, half = 91px)
                             flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
                             row_gap: Px(8.0),
