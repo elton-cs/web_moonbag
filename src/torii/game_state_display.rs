@@ -142,11 +142,39 @@ fn spawn_game_state_display(mut commands: Commands) {
                     },
                 ))
                 .with_children(|parent| {
-                    // Navigation Header (Top)
+                    // Escape Button (Top Left)
+                    parent
+                        .spawn((
+                            EscapeButton,
+                            Button,
+                            Node {
+                                position_type: PositionType::Absolute,
+                                top: Px(20.0),
+                                left: Px(20.0),
+                                width: Px(80.0),
+                                height: Px(35.0),
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::Center,
+                                border: UiRect::all(Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::srgba(0.6, 0.1, 0.1, 0.9)),
+                            BorderColor(Color::srgb(1.0, 0.3, 0.3)),
+                            BorderRadius::all(Px(8.0)),
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                Text::new("ESC"),
+                                TextFont::from_font_size(14.0),
+                                TextColor(Color::srgb(1.0, 0.8, 0.8)),
+                            ));
+                        });
+
+                    // Navigation Header (Below Escape Button)
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Px(20.0),
+                            top: Px(70.0), // Moved down to be below escape button
                             left: Percent(50.0),
                             width: Px(400.0),
                             height: Px(40.0),
@@ -220,39 +248,11 @@ fn spawn_game_state_display(mut commands: Commands) {
                                 });
                         });
 
-                    // Escape Button (Top Right)
-                    parent
-                        .spawn((
-                            EscapeButton,
-                            Button,
-                            Node {
-                                position_type: PositionType::Absolute,
-                                top: Px(20.0),
-                                right: Px(20.0),
-                                width: Px(80.0),
-                                height: Px(35.0),
-                                align_items: AlignItems::Center,
-                                justify_content: JustifyContent::Center,
-                                border: UiRect::all(Px(2.0)),
-                                ..default()
-                            },
-                            BackgroundColor(Color::srgba(0.6, 0.1, 0.1, 0.9)),
-                            BorderColor(Color::srgb(1.0, 0.3, 0.3)),
-                            BorderRadius::all(Px(8.0)),
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                Text::new("ESC"),
-                                TextFont::from_font_size(14.0),
-                                TextColor(Color::srgb(1.0, 0.8, 0.8)),
-                            ));
-                        });
-
-                    // Level Display (Top Center)
+                    // Level Display (Top Right)
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Px(80.0),
+                            top: Px(130.0), // Moved down to accommodate navigation buttons
                             right: Px(40.0),
                             flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
@@ -307,11 +307,11 @@ fn spawn_game_state_display(mut commands: Commands) {
                             ));
                         });
 
-                    // Health Hearts (Top Left)
+                    // Health Hearts (Top Right, below level display)
                     parent
                         .spawn((Node {
                             position_type: PositionType::Absolute,
-                            top: Px(140.0),
+                            top: Px(200.0), // Moved down below level display
                             right: Px(40.0),
                             flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
