@@ -8292,10 +8292,13 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "crossbeam-channel",
+ "dojo-types",
  "log",
  "rand 0.8.5",
+ "serde",
  "starknet 0.15.1",
  "torii-client",
+ "torii-proto",
  "tracing",
  "wasm-bindgen",
  "wasm-bindgen-futures",

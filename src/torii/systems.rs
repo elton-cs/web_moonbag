@@ -8,6 +8,7 @@ use std::sync::Arc;
 use torii_client::Client;
 
 use super::resources::*;
+use super::types::{DojoModel, convert_dojo_struct};
 
 pub async fn create_torii_client() -> Result<Client, Box<dyn std::error::Error + Send + Sync>> {
     let torii_url = "https://api.cartridge.gg/x/moonbagvibes/torii";
@@ -67,12 +68,37 @@ pub async fn run_persistent_entity_stream(client: Arc<Client>, sender: Sender<En
 
                 while let Some(entity_update) = stream.next().await {
                     match entity_update {
-                        Ok(update) => {
-                            info!("Entity update received: {:?}", update);
+                        Ok((timestamp, entity)) => {
+                            // update is (u64, torii_proto::schema::Entity) tuple
+                            debug!("Entity update at timestamp: {}", timestamp);
+                            let entity_id = format!("{:#x}", entity.hashed_keys);
+
+                            // Process each model in the entity
+                            let mut model_opt = None;
+                            let mut model_info = String::new();
+
+                            for model in &entity.models {
+                                match convert_dojo_struct(model) {
+                                    Ok(converted_model) => {
+                                        model_info = format!("{:?}", converted_model);
+                                        model_opt = Some(converted_model);
+                                        break; // Use the first successfully converted model
+                                    }
+                                    Err(e) => {
+                                        model_info =
+                                            format!("Unknown model: {} ({:?})", model.name, e);
+                                    }
+                                }
+                            }
+
+                            if model_info.is_empty() {
+                                model_info = "No models found".to_string();
+                            }
 
                             let event = EntityUpdateEvent {
-                                entity_id: format!("entity_{}", update.0),
-                                update_data: format!("{:?}", update),
+                                entity_id,
+                                update_data: model_info,
+                                model: model_opt,
                             };
 
                             if sender.send(event).is_err() {
@@ -111,9 +137,61 @@ pub fn poll_entity_stream_task(
 
 pub fn log_entity_updates(mut event_reader: EventReader<EntityUpdateEvent>) {
     for event in event_reader.read() {
-        info!(
-            "🔄 Entity Update - ID: {}, Data: {}",
-            event.entity_id, event.update_data
-        );
+        match &event.model {
+            Some(DojoModel::MoonRocks(moon_rocks)) => {
+                info!(
+                    "💎 MoonRocks: player {:#x} has {} rocks",
+                    moon_rocks.player, moon_rocks.amount
+                );
+            }
+            Some(DojoModel::Game(game)) => {
+                info!(
+                    "🎮 Game #{}: level {}, health: {}, points: {}, state: {:?}",
+                    game.game_id, game.current_level, game.health, game.points, game.game_state
+                );
+            }
+            Some(DojoModel::GameCounter(counter)) => {
+                info!(
+                    "🔢 Next game ID for player {:#x}: {}",
+                    counter.player, counter.next_game_id
+                );
+            }
+            Some(DojoModel::ActiveGame(active)) => {
+                info!(
+                    "🎯 Active game #{} for player {:#x}",
+                    active.game_id, active.player
+                );
+            }
+            Some(DojoModel::OrbBagSlot(slot)) => {
+                info!(
+                    "🎱 Orb slot [{}]: {:?} (active: {})",
+                    slot.slot_index, slot.orb_type, slot.is_active
+                );
+            }
+            Some(DojoModel::DrawnOrb(drawn)) => {
+                info!(
+                    "🎲 Drew {:?} orb at position {}",
+                    drawn.orb_type, drawn.draw_index
+                );
+            }
+            Some(DojoModel::ShopInventory(shop)) => {
+                info!(
+                    "🛍️ Shop slot {}: {:?} orb ({}🧀, {:?})",
+                    shop.slot_index, shop.orb_type, shop.base_price, shop.rarity
+                );
+            }
+            Some(DojoModel::PurchaseHistory(purchase)) => {
+                info!(
+                    "💰 Purchased {:?} orb {} times",
+                    purchase.orb_type, purchase.purchase_count
+                );
+            }
+            None => {
+                debug!(
+                    "❓ Unknown model update for entity {}: {}",
+                    event.entity_id, event.update_data
+                );
+            }
+        }
     }
 }

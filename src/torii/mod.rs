@@ -1,5 +1,6 @@
 mod resources;
 mod systems;
+mod types;
 use bevy::prelude::*;
 pub use resources::*;
 pub use systems::*;

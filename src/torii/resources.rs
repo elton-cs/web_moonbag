@@ -13,10 +13,13 @@ pub(crate) struct ToriiClientTask(
     pub(crate) bevy::tasks::Task<Result<Client, Box<dyn std::error::Error + Send + Sync>>>,
 );
 
+use super::types::DojoModel;
+
 #[derive(Event)]
 pub struct EntityUpdateEvent {
     pub entity_id: String,
     pub update_data: String,
+    pub model: Option<DojoModel>,
 }
 
 #[derive(Resource)]
