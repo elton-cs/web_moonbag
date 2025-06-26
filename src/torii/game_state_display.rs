@@ -121,8 +121,8 @@ fn spawn_game_state_display(mut commands: Commands) {
                 max_width: Px(1200.0),
                 max_height: Px(800.0),
                 flex_direction: FlexDirection::Column,
-                padding: UiRect::all(Px(20.0)),
-                row_gap: Px(20.0),
+                padding: UiRect::all(Px(15.0)),
+                row_gap: Px(10.0),
                 overflow: Overflow::scroll_y(),
                 ..default()
             },
@@ -136,7 +136,7 @@ fn spawn_game_state_display(mut commands: Commands) {
                     flex_direction: FlexDirection::Row,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::SpaceBetween,
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(10.0)),
                     ..default()
                 },
             )).with_children(|parent| {
@@ -145,8 +145,8 @@ fn spawn_game_state_display(mut commands: Commands) {
                     PrevPlayerButton,
                     Button,
                     Node {
-                        width: Px(100.0),
-                        height: Px(40.0),
+                        width: Px(80.0),
+                        height: Px(30.0),
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         ..default()
@@ -156,7 +156,7 @@ fn spawn_game_state_display(mut commands: Commands) {
                 )).with_children(|parent| {
                     parent.spawn((
                         Text::new("< Prev"),
-                        TextFont::from_font_size(16.0),
+                        TextFont::from_font_size(12.0),
                         TextColor(Color::WHITE),
                     ));
                 });
@@ -165,7 +165,7 @@ fn spawn_game_state_display(mut commands: Commands) {
                 parent.spawn((
                     PlayerInfoText,
                     Text::new("No Players"),
-                    TextFont::from_font_size(24.0),
+                    TextFont::from_font_size(16.0),
                     TextColor(Color::WHITE),
                     Node {
                         align_self: AlignSelf::Center,
@@ -178,8 +178,8 @@ fn spawn_game_state_display(mut commands: Commands) {
                     NextPlayerButton,
                     Button,
                     Node {
-                        width: Px(100.0),
-                        height: Px(40.0),
+                        width: Px(80.0),
+                        height: Px(30.0),
                         align_items: AlignItems::Center,
                         justify_content: JustifyContent::Center,
                         ..default()
@@ -189,7 +189,7 @@ fn spawn_game_state_display(mut commands: Commands) {
                 )).with_children(|parent| {
                     parent.spawn((
                         Text::new("Next >"),
-                        TextFont::from_font_size(16.0),
+                        TextFont::from_font_size(12.0),
                         TextColor(Color::WHITE),
                     ));
                 });
@@ -198,11 +198,11 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Title
             parent.spawn((
                 Text::new("Player Game Data"),
-                TextFont::from_font_size(28.0),
+                TextFont::from_font_size(20.0),
                 TextColor(Color::WHITE),
                 Node {
                     align_self: AlignSelf::Center,
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -210,16 +210,16 @@ fn spawn_game_state_display(mut commands: Commands) {
             // MoonRocks Section
             parent.spawn((
                 Text::new("MoonRocks"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 MoonRocksText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                 Node {
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -227,16 +227,16 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Active Games Section
             parent.spawn((
                 Text::new("Active Games"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 ActiveGamesText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                 Node {
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -244,16 +244,16 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Game Counters Section
             parent.spawn((
                 Text::new("Game Counters"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 GameCountersText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                 Node {
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -261,16 +261,16 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Orb Bag Slots Section
             parent.spawn((
                 Text::new("Orb Bag Slots Summary"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 OrbBagSlotsText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                 Node {
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -278,16 +278,16 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Shop Inventory Section
             parent.spawn((
                 Text::new("Shop Inventory Summary"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 ShopInventoryText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
                 Node {
-                    margin: UiRect::bottom(Px(20.0)),
+                    margin: UiRect::bottom(Px(15.0)),
                     ..default()
                 }
             ));
@@ -295,13 +295,13 @@ fn spawn_game_state_display(mut commands: Commands) {
             // Purchase History Section
             parent.spawn((
                 Text::new("Purchase History Summary"),
-                TextFont::from_font_size(24.0),
+                TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
             parent.spawn((
                 PurchaseHistoryText,
                 Text::new("Loading..."),
-                TextFont::from_font_size(16.0),
+                TextFont::from_font_size(12.0),
                 TextColor(Color::srgb(0.9, 0.9, 0.9)),
             ));
         });
