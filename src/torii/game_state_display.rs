@@ -4,7 +4,6 @@ use starknet::core::types::Felt;
 use std::collections::HashSet;
 
 use super::game_state::GameState;
-use super::types::Game;
 
 pub struct GameStateDisplayPlugin;
 
@@ -225,9 +224,9 @@ fn spawn_game_state_display(mut commands: Commands) {
                 }
             ));
 
-            // Active Games Section
+            // Last Game Section
             parent.spawn((
-                Text::new("Active Games"),
+                Text::new("Last Game"),
                 TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
@@ -261,7 +260,7 @@ fn spawn_game_state_display(mut commands: Commands) {
 
             // Orb Bag Slots Section
             parent.spawn((
-                Text::new("Orb Bag Slots Summary"),
+                Text::new("Last Game - Orb Bag Slots"),
                 TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
@@ -278,7 +277,7 @@ fn spawn_game_state_display(mut commands: Commands) {
 
             // Shop Inventory Section
             parent.spawn((
-                Text::new("Shop Inventory Summary"),
+                Text::new("Last Game - Shop Inventory"),
                 TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
@@ -295,7 +294,7 @@ fn spawn_game_state_display(mut commands: Commands) {
 
             // Purchase History Section
             parent.spawn((
-                Text::new("Purchase History Summary"),
+                Text::new("Last Game - Purchase History"),
                 TextFont::from_font_size(16.0),
                 TextColor(Color::srgb(0.8, 0.8, 0.8)),
             ));
@@ -397,6 +396,27 @@ fn handle_navigation_buttons(
     }
 }
 
+fn get_last_game_id(game_state: &GameState, player: &Felt) -> Option<u32> {
+    // Find the last game by looking at the game counter
+    if let Some(counter) = game_state.game_counters.get(player) {
+        if counter.next_game_id > 0 {
+            // The last game would be next_game_id - 1
+            return Some(counter.next_game_id - 1);
+        }
+    }
+    
+    // Fallback: find the highest game_id for this player in the games map
+    game_state.games.iter()
+        .filter_map(|((p, game_id), _)| {
+            if p == player {
+                Some(*game_id)
+            } else {
+                None
+            }
+        })
+        .max()
+}
+
 fn update_game_state_display(
     game_state: Option<Res<GameState>>,
     player_nav: Res<PlayerNavigation>,
@@ -440,32 +460,20 @@ fn update_game_state_display(
         }
     }
 
-    // Update Active Games
+    // Update Last Game (formerly Active Games)
     if let Ok(mut text) = active_games_query.single_mut() {
-        let mut active_games: Vec<(u32, &Game)> = game_state.games.iter()
-            .filter_map(|((player, game_id), game)| {
-                if *player == current_player && game.is_active {
-                    Some((*game_id, game))
-                } else {
-                    None
-                }
-            })
-            .collect();
-        
-        // Sort by game_id
-        active_games.sort_by_key(|(game_id, _)| *game_id);
-        
-        let mut content = String::new();
-        for (game_id, game) in active_games {
-            content.push_str(&format!(
-                "Game #{} | Health: {} | Points: {} | Level: {} | State: {:?}\n",
-                game_id, game.health, game.points, game.current_level, game.game_state
-            ));
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            if let Some(game) = game_state.games.get(&(current_player, last_game_id)) {
+                **text = format!(
+                    "Game #{} | Health: {} | Points: {} | Level: {} | State: {:?}",
+                    last_game_id, game.health, game.points, game.current_level, game.game_state
+                );
+            } else {
+                **text = format!("Last game #{} data not found", last_game_id);
+            }
+        } else {
+            **text = "No games found for this player".to_string();
         }
-        if content.is_empty() {
-            content = "No active games for this player".to_string();
-        }
-        **text = content;
     }
 
     // Update Game Counters
@@ -477,73 +485,109 @@ fn update_game_state_display(
         }
     }
 
-    // Update Orb Bag Slots
+    // Update Orb Bag Slots (Last Game Only)
     if let Ok(mut text) = orb_bag_slots_query.single_mut() {
-        let mut slots_by_game: std::collections::HashMap<u32, usize> = std::collections::HashMap::new();
-        for ((player, game_id, _), _) in game_state.orb_bag_slots.iter() {
-            if *player == current_player {
-                *slots_by_game.entry(*game_id).or_insert(0) += 1;
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            let mut slots: Vec<&super::types::OrbBagSlot> = game_state.orb_bag_slots.iter()
+                .filter_map(|((player, game_id, _), slot)| {
+                    if *player == current_player && *game_id == last_game_id {
+                        Some(slot)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            
+            // Sort by slot_index
+            slots.sort_by_key(|slot| slot.slot_index);
+            
+            let mut content = String::new();
+            for slot in slots {
+                let status = if slot.is_active { "Active" } else { "Inactive" };
+                content.push_str(&format!(
+                    "Slot {}: {:?} ({})\n", 
+                    slot.slot_index, slot.orb_type, status
+                ));
             }
+            if content.is_empty() {
+                content = format!("No orb bag slots for last game #{}", last_game_id);
+            }
+            **text = content;
+        } else {
+            **text = "No games found for this player".to_string();
         }
-        
-        // Convert to sorted vector
-        let mut sorted_slots: Vec<(u32, usize)> = slots_by_game.into_iter().collect();
-        sorted_slots.sort_by_key(|(game_id, _)| *game_id);
-        
-        let mut content = String::new();
-        for (game_id, count) in sorted_slots {
-            content.push_str(&format!("Game #{}: {} slots\n", game_id, count));
-        }
-        if content.is_empty() {
-            content = "No orb bag slots data for this player".to_string();
-        }
-        **text = content;
     }
 
-    // Update Shop Inventory
+    // Update Shop Inventory (Last Game Only)
     if let Ok(mut text) = shop_inventory_query.single_mut() {
-        let mut items_by_game_level: std::collections::HashMap<(u32, u8), usize> = std::collections::HashMap::new();
-        for ((player, game_id, level, _), _) in game_state.shop_inventory.iter() {
-            if *player == current_player {
-                *items_by_game_level.entry((*game_id, *level)).or_insert(0) += 1;
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            let mut items_by_level: std::collections::HashMap<u8, Vec<&super::types::ShopInventory>> = std::collections::HashMap::new();
+            for ((player, game_id, level, _), shop) in game_state.shop_inventory.iter() {
+                if *player == current_player && *game_id == last_game_id {
+                    items_by_level.entry(*level).or_default().push(shop);
+                }
             }
+            
+            // Convert to sorted vector by level
+            let mut sorted_levels: Vec<(u8, Vec<&super::types::ShopInventory>)> = items_by_level.into_iter().collect();
+            sorted_levels.sort_by_key(|(level, _)| *level);
+            
+            let mut content = String::new();
+            for (level, mut items) in sorted_levels {
+                // Sort items by slot_index within each level
+                items.sort_by_key(|item| item.slot_index);
+                content.push_str(&format!("Level {} ({} items):\n", level, items.len()));
+                for item in items {
+                    content.push_str(&format!(
+                        "  Slot {}: {:?} - {}🧀 ({:?})\n", 
+                        item.slot_index, item.orb_type, item.base_price, item.rarity
+                    ));
+                }
+            }
+            if content.is_empty() {
+                content = format!("No shop inventory for last game #{}", last_game_id);
+            }
+            **text = content;
+        } else {
+            **text = "No games found for this player".to_string();
         }
-        
-        // Convert to sorted vector - sort by game_id first, then level
-        let mut sorted_items: Vec<((u32, u8), usize)> = items_by_game_level.into_iter().collect();
-        sorted_items.sort_by_key(|((game_id, level), _)| (*game_id, *level));
-        
-        let mut content = String::new();
-        for ((game_id, level), count) in sorted_items {
-            content.push_str(&format!("Game #{} Level {}: {} items\n", game_id, level, count));
-        }
-        if content.is_empty() {
-            content = "No shop inventory data for this player".to_string();
-        }
-        **text = content;
     }
 
-    // Update Purchase History
+    // Update Purchase History (Last Game Only)
     if let Ok(mut text) = purchase_history_query.single_mut() {
-        let mut aggregated: std::collections::HashMap<u32, u32> = std::collections::HashMap::new();
-        for ((player, game_id, _), history) in game_state.purchase_history.iter() {
-            if *player == current_player {
-                *aggregated.entry(*game_id).or_insert(0) += history.purchase_count;
+        if let Some(last_game_id) = get_last_game_id(&game_state, &current_player) {
+            let mut purchases: Vec<&super::types::PurchaseHistory> = game_state.purchase_history.iter()
+                .filter_map(|((player, game_id, _), history)| {
+                    if *player == current_player && *game_id == last_game_id {
+                        Some(history)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            
+            if !purchases.is_empty() {
+                let mut content = String::new();
+                // Sort by orb type for consistent display
+                purchases.sort_by_key(|p| format!("{:?}", p.orb_type));
+                
+                let total_purchases: u32 = purchases.iter().map(|p| p.purchase_count).sum();
+                content.push_str(&format!("Total purchases: {}\n", total_purchases));
+                content.push_str("Purchases by orb type:\n");
+                
+                for purchase in purchases {
+                    content.push_str(&format!(
+                        "  {:?}: {} times\n", 
+                        purchase.orb_type, purchase.purchase_count
+                    ));
+                }
+                **text = content;
+            } else {
+                **text = format!("No purchase history for last game #{}", last_game_id);
             }
+        } else {
+            **text = "No games found for this player".to_string();
         }
-        
-        // Convert to sorted vector
-        let mut sorted_purchases: Vec<(u32, u32)> = aggregated.into_iter().collect();
-        sorted_purchases.sort_by_key(|(game_id, _)| *game_id);
-        
-        let mut content = String::new();
-        for (game_id, total_count) in sorted_purchases {
-            content.push_str(&format!("Game #{}: {} purchases\n", game_id, total_count));
-        }
-        if content.is_empty() {
-            content = "No purchase history data for this player".to_string();
-        }
-        **text = content;
     }
 }
 
