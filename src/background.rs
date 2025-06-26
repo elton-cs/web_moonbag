@@ -44,7 +44,7 @@ fn spawn_background(
 ) {
     commands.spawn((
         Name::new("Background"),
-        Mesh3d(meshes.add(Rectangle::new(10.0, 10.0))), // Large quad for background
+        Mesh3d(meshes.add(Rectangle::new(20.0, 20.0))), // Double the original size
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color_texture: Some(background_assets.starbg.clone()),
             unlit: true, // No lighting for background
@@ -98,13 +98,23 @@ fn spawn_lighting(mut commands: Commands) {
 #[derive(Component)]
 struct MoonRotation;
 
-/// System to slowly rotate the moon along the X-axis
+/// System to rotate the moon irregularly like a floating space rock
 fn rotate_moon(time: Res<Time>, mut query: Query<&mut Transform, With<MoonRotation>>) {
-    let rotation_speed = 0.5; // Radians per second (adjust for desired speed)
-    let delta_rotation = rotation_speed * time.delta_secs();
+    let elapsed = time.elapsed_secs();
+    
+    // Use sine and cosine functions with different frequencies to create irregular rotation
+    let x_rotation_speed = 0.2 * (1.0 + 0.5 * (elapsed * 0.7).sin()); // Varies between 0.1 and 0.3
+    let y_rotation_speed = 0.15 * (1.0 + 0.3 * (elapsed * 1.1).cos()); // Varies between ~0.105 and ~0.195
+    let z_rotation_speed = 0.1 * (1.0 + 0.8 * (elapsed * 0.5).sin()); // Varies between 0.02 and 0.18
+
+    let delta_x_rotation = x_rotation_speed * time.delta_secs();
+    let delta_y_rotation = y_rotation_speed * time.delta_secs();
+    let delta_z_rotation = z_rotation_speed * time.delta_secs();
 
     for mut transform in query.iter_mut() {
-        // Rotate around X-axis while preserving translation and scale
-        transform.rotate_x(delta_rotation);
+        // Rotate around all three axes with varying speeds for natural tumbling motion
+        transform.rotate_x(delta_x_rotation);
+        transform.rotate_y(delta_y_rotation);
+        transform.rotate_z(delta_z_rotation);
     }
 }
