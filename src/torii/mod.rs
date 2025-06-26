@@ -1,4 +1,5 @@
 mod game_state;
+mod game_state_display;
 mod resources;
 mod systems;
 mod types;
@@ -22,7 +23,8 @@ impl Plugin for ToriiPlugin {
                     poll_entity_stream_task,
                     log_entity_updates,
                 ),
-            );
+            )
+            .add_plugins(game_state_display::GameStateDisplayPlugin);
     }
 }
 
