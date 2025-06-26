@@ -32,15 +32,23 @@ impl FromWorld for BackgroundAssets {
     }
 }
 
-fn spawn_background(mut commands: Commands, background_assets: Res<BackgroundAssets>) {
+fn spawn_background(
+    mut commands: Commands, 
+    background_assets: Res<BackgroundAssets>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands.spawn((
         Name::new("Background"),
-        Sprite {
-            image: background_assets.starbg.clone(),
+        Mesh3d(meshes.add(Rectangle::new(10.0, 10.0))), // Large quad for background
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color_texture: Some(background_assets.starbg.clone()),
+            unlit: true, // No lighting for background
             ..default()
-        },
-        Transform::from_translation(Vec3::new(0.0, 0.0, -2.0)) // Far behind in 3D space
-            .with_scale(Vec3::splat(1.0)),
+        })),
+        Transform::from_translation(Vec3::new(0.0, 0.0, -5.0)) // Far behind in 3D space
+            .with_rotation(Quat::from_rotation_x(0.0)), // Face the camera
+        Visibility::default(),
     ));
 }
 
@@ -50,5 +58,6 @@ fn spawn_moon(mut commands: Commands, background_assets: Res<BackgroundAssets>) 
         SceneRoot(background_assets.moon.clone()),
         Transform::from_translation(Vec3::new(0.0, 0.0, -1.0)) // Centered, in front of background
             .with_scale(Vec3::splat(1.0)),
+        Visibility::default(), // Ensure visibility in 3D scene
     ));
 }
