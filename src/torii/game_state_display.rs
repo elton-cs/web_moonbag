@@ -4,6 +4,7 @@ use starknet::core::types::Felt;
 use std::collections::HashSet;
 
 use super::game_state::GameState;
+use super::types::Game;
 
 pub struct GameStateDisplayPlugin;
 
@@ -441,14 +442,25 @@ fn update_game_state_display(
 
     // Update Active Games
     if let Ok(mut text) = active_games_query.single_mut() {
+        let mut active_games: Vec<(u32, &Game)> = game_state.games.iter()
+            .filter_map(|((player, game_id), game)| {
+                if *player == current_player && game.is_active {
+                    Some((*game_id, game))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        // Sort by game_id
+        active_games.sort_by_key(|(game_id, _)| *game_id);
+        
         let mut content = String::new();
-        for ((player, game_id), game) in game_state.games.iter() {
-            if *player == current_player && game.is_active {
-                content.push_str(&format!(
-                    "Game #{} | Health: {} | Points: {} | Level: {} | State: {:?}\n",
-                    game_id, game.health, game.points, game.current_level, game.game_state
-                ));
-            }
+        for (game_id, game) in active_games {
+            content.push_str(&format!(
+                "Game #{} | Health: {} | Points: {} | Level: {} | State: {:?}\n",
+                game_id, game.health, game.points, game.current_level, game.game_state
+            ));
         }
         if content.is_empty() {
             content = "No active games for this player".to_string();
@@ -474,8 +486,12 @@ fn update_game_state_display(
             }
         }
         
+        // Convert to sorted vector
+        let mut sorted_slots: Vec<(u32, usize)> = slots_by_game.into_iter().collect();
+        sorted_slots.sort_by_key(|(game_id, _)| *game_id);
+        
         let mut content = String::new();
-        for (game_id, count) in slots_by_game.iter() {
+        for (game_id, count) in sorted_slots {
             content.push_str(&format!("Game #{}: {} slots\n", game_id, count));
         }
         if content.is_empty() {
@@ -493,8 +509,12 @@ fn update_game_state_display(
             }
         }
         
+        // Convert to sorted vector - sort by game_id first, then level
+        let mut sorted_items: Vec<((u32, u8), usize)> = items_by_game_level.into_iter().collect();
+        sorted_items.sort_by_key(|((game_id, level), _)| (*game_id, *level));
+        
         let mut content = String::new();
-        for ((game_id, level), count) in items_by_game_level.iter() {
+        for ((game_id, level), count) in sorted_items {
             content.push_str(&format!("Game #{} Level {}: {} items\n", game_id, level, count));
         }
         if content.is_empty() {
@@ -512,8 +532,12 @@ fn update_game_state_display(
             }
         }
         
+        // Convert to sorted vector
+        let mut sorted_purchases: Vec<(u32, u32)> = aggregated.into_iter().collect();
+        sorted_purchases.sort_by_key(|(game_id, _)| *game_id);
+        
         let mut content = String::new();
-        for (game_id, total_count) in aggregated.iter() {
+        for (game_id, total_count) in sorted_purchases {
             content.push_str(&format!("Game #{}: {} purchases\n", game_id, total_count));
         }
         if content.is_empty() {
