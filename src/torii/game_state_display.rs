@@ -323,12 +323,9 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                                 },
                                 align_items: AlignItems::Center,
                                 justify_content: JustifyContent::Center,
-                                border: UiRect::all(Px(3.0)),
                                 ..default()
                             },
-                            BackgroundColor(Color::srgba(0.1, 0.1, 0.2, 0.7)),
-                            BorderColor(Color::srgb(0.4, 0.8, 1.0)),
-                            BorderRadius::all(Px(150.0)), // Make it circular
+                            ImageNode::new(asset_server.load("Moonbag/Items/bag.png")),
                         ))
                         .with_children(|parent| {
                             parent.spawn((

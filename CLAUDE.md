@@ -23,10 +23,11 @@ This project is primarily developed for web deployment using Bevy CLI:
 This is a Bevy 0.16 game with modular plugin architecture supporting both native and web platforms:
 
 ### Core Systems
-- **State Management**: Uses `Screen` enum for game flow (Splash → Title → Loading → Gameplay)
-- **Asset Loading**: Custom `LoadResource` trait with `ResourceHandles` for progress tracking
-- **Input System**: Centralized input recording in `RecordInput` system set
-- **Audio**: Background music and SFX with volume controls
+- **State Management**: Uses `Screen` enum for game flow (Splash → Title → Loading → Gameplay) - Currently disabled
+- **Asset Loading**: Custom `LoadResource` trait with `ResourceHandles` for progress tracking - Currently disabled
+- **Input System**: Centralized input recording in `RecordInput` system set via `AppSystems` ordering
+- **Audio**: Background music and SFX with volume controls - Currently disabled
+- **3D Rendering**: Uses 3D camera with directional and ambient lighting for background scene
 
 ### Module Organization
 - `src/demo/` - Gameplay mechanics (player, movement, animation, level) - Currently disabled
@@ -35,7 +36,7 @@ This is a Bevy 0.16 game with modular plugin architecture supporting both native
 - `src/theme/` - UI theming and widgets - Currently disabled
 - `src/dev_tools.rs` - Development utilities (conditional compilation) - Currently disabled
 - `src/torii/` - Blockchain integration using Torii client for Dojo/Starknet (actively used)
-- `src/background.rs` - Background rendering system using sprite-based backgrounds
+- `src/background.rs` - 3D background rendering system with rotating starfield and moon model
 
 ### Key Patterns
 - **ECS**: Component-based entities with system ordering via `AppSystems`
@@ -47,12 +48,19 @@ This is a Bevy 0.16 game with modular plugin architecture supporting both native
 - Web builds disable asset meta checking to prevent panics
 - Uses conditional compilation for platform-specific features
 - Logging optimized out in release builds for performance
+- Canvas fits to parent container for web deployment
+- Uses 3D camera positioned at (0,0,5) looking toward origin
+
+### Asset Configuration
+- Images use nearest neighbor sampling for pixel-perfect rendering
+- 3D models loaded from .glb files with scene extraction
+- Unlit materials used for background to avoid lighting calculations
 
 ## Current Project State
 
 **Active Plugins:**
-- `background::plugin` - Renders starbg.png as background sprite
-- `torii::plugin` - Blockchain integration with Dojo/Starknet
+- `background::plugin` - Renders 3D starfield background with rotating moon model using starbg.png texture and moon.glb
+- `torii::plugin` - Blockchain integration with Dojo/Starknet entity streaming
 
 **Disabled Plugins (commented out in main.rs):**
 - Most game features are currently disabled during development
