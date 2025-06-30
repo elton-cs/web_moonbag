@@ -352,15 +352,15 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                         .spawn((Node {
                             position_type: PositionType::Absolute,
                             top: Percent(50.0), // Center vertically to match moonbag
-                            right: Px(40.0),
-                            margin: UiRect::top(Px(-50.0)), // Adjust for container size
-                            width: Px(80.0),   // Container width
-                            height: Px(120.0), // Container height
+                            right: Px(15.0), // Moved closer to right edge
+                            margin: UiRect::top(Px(-100.0)), // Adjust for taller single column container
+                            width: Px(50.0),   // Container width for single column
+                            height: Px(200.0), // Container height for 5 hearts
                             padding: UiRect::all(Px(8.0)), // Inner padding
-                            flex_direction: FlexDirection::Row,
+                            flex_direction: FlexDirection::Column,
                             align_items: AlignItems::Center,
                             justify_content: JustifyContent::Center,
-                            column_gap: Px(5.0), // Gap between columns
+                            row_gap: Px(5.0), // Gap between hearts
                             border: UiRect::all(Px(3.0)),
                             ..default()
                         },
@@ -369,53 +369,20 @@ fn spawn_game_state_display(mut commands: Commands, asset_server: Res<AssetServe
                         BorderRadius::all(Px(8.0)), // Rounded corners
                         ))
                         .with_children(|parent| {
-                            // First column (2 hearts)
-                            parent.spawn((
-                                Node {
-                                    flex_direction: FlexDirection::Column,
-                                    align_items: AlignItems::Center,
-                                    row_gap: Px(5.0),
-                                    ..default()
-                                },
-                            )).with_children(|parent| {
-                                for i in 0..2 {
-                                    parent.spawn((
-                                        HealthHeart { index: i },
-                                        Node {
-                                            width: Px(28.0),
-                                            height: Px(28.0),
-                                            ..default()
-                                        },
-                                        ImageNode::new(
-                                            asset_server.load("Moonbag/Items/grey heart.png"), // Start with grey hearts
-                                        ),
-                                    ));
-                                }
-                            });
-                            
-                            // Second column (3 hearts)
-                            parent.spawn((
-                                Node {
-                                    flex_direction: FlexDirection::Column,
-                                    align_items: AlignItems::Center,
-                                    row_gap: Px(5.0),
-                                    ..default()
-                                },
-                            )).with_children(|parent| {
-                                for i in 2..5 {
-                                    parent.spawn((
-                                        HealthHeart { index: i },
-                                        Node {
-                                            width: Px(28.0),
-                                            height: Px(28.0),
-                                            ..default()
-                                        },
-                                        ImageNode::new(
-                                            asset_server.load("Moonbag/Items/grey heart.png"), // Start with grey hearts
-                                        ),
-                                    ));
-                                }
-                            });
+                            // Single column of 5 hearts
+                            for i in 0..5 {
+                                parent.spawn((
+                                    HealthHeart { index: i },
+                                    Node {
+                                        width: Px(32.0),
+                                        height: Px(32.0),
+                                        ..default()
+                                    },
+                                    ImageNode::new(
+                                        asset_server.load("Moonbag/Items/grey heart.png"), // Start with grey hearts
+                                    ),
+                                ));
+                            }
                         });
 
                     // MoonRocks Display (Bottom Left)
