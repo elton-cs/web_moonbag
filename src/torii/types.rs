@@ -202,23 +202,27 @@ mod conversion_helpers {
     }
 
     /// Extract and convert enum field from Dojo struct
-    pub fn extract_enum<T>(struct_value: &Struct, field: &str) -> T 
-    where 
+    pub fn extract_enum<T>(struct_value: &Struct, field: &str) -> T
+    where
         T: for<'a> From<&'a Enum>,
     {
         T::from(struct_value.get(field).unwrap().as_enum().unwrap())
     }
 
     /// Generic enum to variant conversion with error handling
-    pub fn enum_to_variant<T: Clone>(enum_value: &Enum, variants: &[(u8, T)], type_name: &str) -> T {
+    pub fn enum_to_variant<T: Clone>(
+        enum_value: &Enum,
+        variants: &[(u8, T)],
+        type_name: &str,
+    ) -> T {
         let value = enum_value.option.unwrap_or(0);
-        
+
         for (variant_value, variant) in variants {
             if *variant_value == value {
                 return variant.clone();
             }
         }
-        
+
         panic!("Invalid {} value: {}", type_name, value)
     }
 }
@@ -236,49 +240,61 @@ impl From<Direction> for Felt {
 /// Conversion from Dojo enum to GameState
 impl From<&dojo_types::schema::Enum> for GameState {
     fn from(enum_value: &dojo_types::schema::Enum) -> Self {
-        enum_to_variant(enum_value, &[
-            (0, GameState::Active),
-            (1, GameState::LevelComplete),
-            (2, GameState::GameWon),
-            (3, GameState::GameLost),
-        ], "GameState")
+        enum_to_variant(
+            enum_value,
+            &[
+                (0, GameState::Active),
+                (1, GameState::LevelComplete),
+                (2, GameState::GameWon),
+                (3, GameState::GameLost),
+            ],
+            "GameState",
+        )
     }
 }
 
 /// Conversion from Dojo enum to ShopRarity
 impl From<&Enum> for ShopRarity {
     fn from(enum_value: &Enum) -> Self {
-        enum_to_variant(enum_value, &[
-            (0, ShopRarity::Common),
-            (1, ShopRarity::Rare),
-            (2, ShopRarity::Cosmic),
-        ], "ShopRarity")
+        enum_to_variant(
+            enum_value,
+            &[
+                (0, ShopRarity::Common),
+                (1, ShopRarity::Rare),
+                (2, ShopRarity::Cosmic),
+            ],
+            "ShopRarity",
+        )
     }
 }
 
 /// Conversion from Dojo enum to OrbType
 impl From<&Enum> for OrbType {
     fn from(enum_value: &Enum) -> Self {
-        enum_to_variant(enum_value, &[
-            (0, OrbType::SingleBomb),
-            (1, OrbType::DoubleBomb),
-            (2, OrbType::TripleBomb),
-            (3, OrbType::FivePoints),
-            (4, OrbType::DoubleMultiplier),
-            (5, OrbType::RemainingOrbs),
-            (6, OrbType::BombCounter),
-            (7, OrbType::Health),
-            (8, OrbType::CheddahBomb),
-            (9, OrbType::SevenPoints),
-            (10, OrbType::MoonRock),
-            (11, OrbType::HalfMultiplier),
-            (12, OrbType::EightPoints),
-            (13, OrbType::NinePoints),
-            (14, OrbType::NextPoints2x),
-            (15, OrbType::Multiplier1_5x),
-            (16, OrbType::BigHealth),
-            (17, OrbType::BigMoonRock),
-        ], "OrbType")
+        enum_to_variant(
+            enum_value,
+            &[
+                (0, OrbType::SingleBomb),
+                (1, OrbType::DoubleBomb),
+                (2, OrbType::TripleBomb),
+                (3, OrbType::FivePoints),
+                (4, OrbType::DoubleMultiplier),
+                (5, OrbType::RemainingOrbs),
+                (6, OrbType::BombCounter),
+                (7, OrbType::Health),
+                (8, OrbType::CheddahBomb),
+                (9, OrbType::SevenPoints),
+                (10, OrbType::MoonRock),
+                (11, OrbType::HalfMultiplier),
+                (12, OrbType::EightPoints),
+                (13, OrbType::NinePoints),
+                (14, OrbType::NextPoints2x),
+                (15, OrbType::Multiplier1_5x),
+                (16, OrbType::BigHealth),
+                (17, OrbType::BigMoonRock),
+            ],
+            "OrbType",
+        )
     }
 }
 

@@ -1,7 +1,7 @@
 //! Event definitions for Dojo blockchain integration.
 
-use bevy::prelude::*;
 use crate::torii::types::*;
+use bevy::prelude::*;
 
 // ==================== EVENTS ====================
 
