@@ -17,15 +17,22 @@ tracing = { version = "0.1", features = [
     "max_level_debug",
     "release_max_level_warn",
 ] }
-torii-client = { git = "https://github.com/dojoengine/torii.git", tag = "v1.5.7" }
-torii-proto = { git = "https://github.com/dojoengine/torii.git", tag = "v1.5.7" }
+
+# dojo_bevy_plugin = { git = "https://github.com/elton-cs/dojo.bevy.git", rev = "1bb1831e831705a66c26395e6b6ef1d908bb49c7" }
+dojo_bevy_plugin = { git = "https://github.com/elton-cs/dojo.bevy.git", branch = "bevy-wasm-v1" }
+starknet = "0.13"
 dojo-types = { git = "https://github.com/dojoengine/dojo", rev = "4145801" }
-serde = { version = "1.0", features = ["derive"] }
-starknet = "0.15.1"
-crossbeam-channel = "0.5"
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["console"] }
+torii-grpc-client = { git = "https://github.com/dojoengine/torii", rev = "ee8756a" }
+
+# torii-client = { git = "https://github.com/dojoengine/torii.git", tag = "v1.5.7" }
+# torii-proto = { git = "https://github.com/dojoengine/torii.git", tag = "v1.5.7" }
+# dojo-types = { git = "https://github.com/dojoengine/dojo", rev = "4145801" }
+# serde = { version = "1.0", features = ["derive"] }
+# starknet = "0.15.1"
+# crossbeam-channel = "0.5"
+# wasm-bindgen = "0.2"
+# wasm-bindgen-futures = "0.4"
+# web-sys = { version = "0.3", features = ["console"] }
 
 # Your web builds will start failing if you add a dependency that pulls in `getrandom` v0.3+.
 # To fix this, you should tell `getrandom` to use the `wasm_js` backend on Wasm.
