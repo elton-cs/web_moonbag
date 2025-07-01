@@ -1,4 +1,4 @@
-//! Dojo Display Plugin for rendering blockchain game data
+//! Dojo Display Plugin for rendering blockchain game data using modern Bevy 0.16 syntax
 
 use bevy::prelude::*;
 
@@ -10,13 +10,17 @@ pub struct DojoDisplayPlugin;
 impl Plugin for DojoDisplayPlugin {
     fn build(&self, app: &mut App) {
         app
-            // Register events
+            // Register all blockchain events
             .add_event::<GameUpdatedEvent>()
             .add_event::<MoonRocksUpdatedEvent>()
             .add_event::<PositionUpdatedEvent>()
             .add_event::<OrbBagSlotUpdatedEvent>()
             .add_event::<ShopInventoryUpdatedEvent>()
             .add_event::<DrawnOrbAddedEvent>()
+            .add_event::<GameCounterUpdatedEvent>()
+            .add_event::<ActiveGameUpdatedEvent>()
+            .add_event::<DrawnOrbUpdatedEvent>()
+            .add_event::<PurchaseHistoryUpdatedEvent>()
             
             // Initialize resources
             .init_resource::<DisplayData>()
@@ -31,6 +35,8 @@ impl Plugin for DojoDisplayPlugin {
                 update_orb_bag_display,
                 update_shop_display,
                 update_drawn_orbs_display,
+                update_game_counter_display,
+                update_active_game_display,
             ));
     }
 }

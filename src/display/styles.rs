@@ -1,4 +1,4 @@
-//! UI styling constants and theme definitions for Dojo display
+//! UI styling constants and theme definitions for Dojo display using modern Bevy 0.16
 
 use bevy::prelude::*;
 
@@ -35,71 +35,4 @@ impl Spacing {
     pub const MEDIUM: f32 = 8.0;
     pub const LARGE: f32 = 16.0;
     pub const XLARGE: f32 = 24.0;
-}
-
-/// Common style builders for Node components
-pub struct StyleBuilders;
-
-impl StyleBuilders {
-    /// Create a panel container style
-    pub fn panel_container() -> Node {
-        Node {
-            padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
-            margin: UiRect::all(Val::Px(Spacing::SMALL)),
-            border: UiRect::all(Val::Px(1.0)),
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Stretch,
-            justify_content: JustifyContent::FlexStart,
-            ..default()
-        }
-    }
-
-    /// Create a row container style
-    pub fn row_container() -> Node {
-        Node {
-            flex_direction: FlexDirection::Row,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::SpaceBetween,
-            margin: UiRect::vertical(Val::Px(Spacing::SMALL)),
-            ..default()
-        }
-    }
-
-    /// Create the main display root style
-    pub fn display_root() -> Node {
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(10.0),
-            left: Val::Px(10.0),
-            width: Val::Px(400.0),
-            height: Val::Auto,
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Stretch,
-            ..default()
-        }
-    }
-
-    /// Create orb bag grid style
-    pub fn orb_bag_grid() -> Node {
-        Node {
-            display: Display::Grid,
-            grid_template_columns: RepeatedGridTrack::flex(5, 1.0),
-            column_gap: Val::Px(Spacing::SMALL),
-            row_gap: Val::Px(Spacing::SMALL),
-            padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
-            ..default()
-        }
-    }
-
-    /// Create orb slot style
-    pub fn orb_slot() -> Node {
-        Node {
-            width: Val::Px(40.0),
-            height: Val::Px(40.0),
-            border: UiRect::all(Val::Px(1.0)),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            ..default()
-        }
-    }
 }

@@ -1,7 +1,6 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
 mod torii;
-// TODO: Fix UI component imports in display module
-// mod display;
+mod display;
 mod display_simple;
 
 pub struct AppPlugin;
@@ -24,9 +23,8 @@ impl Plugin for AppPlugin {
                 }),
         );
         app.add_plugins(torii::plugin);
-        // TODO: Fix display plugin UI component imports
-        // app.add_plugins(display::DojoDisplayPlugin);
-        app.add_plugins(display_simple::DojoDisplayPlugin);
+        app.add_plugins(display::DojoDisplayPlugin);
+        // app.add_plugins(display_simple::DojoDisplayPlugin); // Replaced by full display module
 
         app.add_systems(Startup, spawn_camera);
     }
