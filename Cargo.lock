@@ -7921,6 +7921,7 @@ dependencies = [
  "dojo_bevy_plugin",
  "log",
  "rand",
+ "serde",
  "starknet 0.13.0",
  "torii-grpc-client",
  "tracing",

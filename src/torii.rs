@@ -153,7 +153,7 @@ fn process_entity_update(
 
         match m.name.as_str() {
             "di-Position" => {
-                ev_position_updated.send(PositionUpdatedEvent(m.into()));
+                ev_position_updated.write(PositionUpdatedEvent(m.into()));
             }
             "di-Moves" => {
                 // Handle moves model if needed in the future
@@ -178,7 +178,15 @@ fn update_cube_position(
         let Position { x, y, player } = ev.0;
 
         if !entity_tracker.existing_entities.contains(&player) {
-            spawn_new_cube(&mut commands, &mut meshes, &mut materials, &mut entity_tracker, player, x, y);
+            spawn_new_cube(
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+                &mut entity_tracker,
+                player,
+                x,
+                y,
+            );
         } else {
             update_existing_cube(&mut query, player, x, y);
         }
@@ -207,12 +215,7 @@ fn spawn_new_cube(
 }
 
 /// Update position of existing cube
-fn update_existing_cube(
-    query: &mut Query<(&mut Transform, &Cube)>,
-    player: Felt,
-    x: u32,
-    y: u32,
-) {
+fn update_existing_cube(query: &mut Query<(&mut Transform, &Cube)>, player: Felt, x: u32, y: u32) {
     for (mut transform, cube) in query.iter_mut() {
         if cube.player == player {
             info!("Updating cube position: ({}, {})", x, y);

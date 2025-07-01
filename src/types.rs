@@ -5,6 +5,7 @@
 
 use bevy::prelude::*;
 use dojo_types::schema::Struct;
+use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
 use starknet::macros::selector;
 use std::collections::HashSet;
@@ -85,5 +86,538 @@ pub enum Direction {
 impl From<Direction> for Felt {
     fn from(direction: Direction) -> Self {
         Felt::from(direction as u8)
+    }
+}
+
+/// Conversion from Dojo struct to GameState
+impl From<&Struct> for GameState {
+    fn from(struct_value: &Struct) -> Self {
+        // For enums, extract the variant value from the discriminant
+        let state_value = struct_value
+            .get("variant")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        
+        match state_value {
+            0 => GameState::Active,
+            1 => GameState::LevelComplete,
+            2 => GameState::GameWon,
+            3 => GameState::GameLost,
+            _ => panic!("Invalid GameState value: {}", state_value),
+        }
+    }
+}
+
+/// Conversion from Dojo struct to ShopRarity
+impl From<&Struct> for ShopRarity {
+    fn from(struct_value: &Struct) -> Self {
+        let rarity_value = struct_value
+            .get("variant")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        
+        match rarity_value {
+            0 => ShopRarity::Common,
+            1 => ShopRarity::Rare,
+            2 => ShopRarity::Cosmic,
+            _ => panic!("Invalid ShopRarity value: {}", rarity_value),
+        }
+    }
+}
+
+/// Conversion from Dojo struct to OrbType
+impl From<&Struct> for OrbType {
+    fn from(struct_value: &Struct) -> Self {
+        let orb_value = struct_value
+            .get("variant")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        
+        match orb_value {
+            0 => OrbType::SingleBomb,
+            1 => OrbType::DoubleBomb,
+            2 => OrbType::TripleBomb,
+            3 => OrbType::FivePoints,
+            4 => OrbType::DoubleMultiplier,
+            5 => OrbType::RemainingOrbs,
+            6 => OrbType::BombCounter,
+            7 => OrbType::Health,
+            8 => OrbType::CheddahBomb,
+            9 => OrbType::SevenPoints,
+            10 => OrbType::MoonRock,
+            11 => OrbType::HalfMultiplier,
+            12 => OrbType::EightPoints,
+            13 => OrbType::NinePoints,
+            14 => OrbType::NextPoints2x,
+            15 => OrbType::Multiplier1_5x,
+            16 => OrbType::BigHealth,
+            17 => OrbType::BigMoonRock,
+            _ => panic!("Invalid OrbType value: {}", orb_value),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MoonRocks {
+    pub player: Felt,
+    pub amount: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Game {
+    pub player: Felt,
+    pub game_id: u32,
+    pub health: u8,
+    pub points: u32,
+    pub multiplier: u32,
+    pub cheddah: u32,
+    pub current_level: u8,
+    pub is_active: bool,
+    pub game_state: GameState,
+    pub orb_bag_size: u32,
+    pub orbs_drawn_count: u32,
+    pub bombs_drawn_count: u32,
+    pub temp_multiplier_active: bool,
+    pub temp_multiplier_value: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GameCounter {
+    pub player: Felt,
+    pub next_game_id: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ActiveGame {
+    pub player: Felt,
+    pub game_id: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub enum OrbType {
+    SingleBomb,
+    DoubleBomb,
+    TripleBomb,
+    FivePoints,
+    DoubleMultiplier,
+    RemainingOrbs,
+    BombCounter,
+    Health,
+    CheddahBomb,
+    SevenPoints,
+    MoonRock,
+    HalfMultiplier,
+    EightPoints,
+    NinePoints,
+    NextPoints2x,
+    Multiplier1_5x,
+    BigHealth,
+    BigMoonRock,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GameState {
+    Active,
+    LevelComplete,
+    GameWon,
+    GameLost,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrbBagSlot {
+    pub player: Felt,
+    pub game_id: u32,
+    pub slot_index: u32,
+    pub orb_type: OrbType,
+    pub is_active: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DrawnOrb {
+    pub player: Felt,
+    pub game_id: u32,
+    pub draw_index: u32,
+    pub orb_type: OrbType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ShopRarity {
+    Common,
+    Rare,
+    Cosmic,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShopInventory {
+    pub player: Felt,
+    pub game_id: u32,
+    pub level: u8,
+    pub slot_index: u8,
+    pub orb_type: OrbType,
+    pub base_price: u32,
+    pub rarity: ShopRarity,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PurchaseHistory {
+    pub player: Felt,
+    pub game_id: u32,
+    pub orb_type: OrbType,
+    pub purchase_count: u32,
+}
+
+/// Conversion from Dojo struct to MoonRocks
+impl From<&Struct> for MoonRocks {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let amount = struct_value
+            .get("amount")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+
+        MoonRocks { player, amount }
+    }
+}
+
+/// Conversion from Dojo struct to GameCounter
+impl From<&Struct> for GameCounter {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let next_game_id = struct_value
+            .get("next_game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+
+        GameCounter { player, next_game_id }
+    }
+}
+
+/// Conversion from Dojo struct to ActiveGame
+impl From<&Struct> for ActiveGame {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+
+        ActiveGame { player, game_id }
+    }
+}
+
+/// Conversion from Dojo struct to Game
+impl From<&Struct> for Game {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let health = struct_value
+            .get("health")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        let points = struct_value
+            .get("points")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let multiplier = struct_value
+            .get("multiplier")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let cheddah = struct_value
+            .get("cheddah")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let current_level = struct_value
+            .get("current_level")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        let is_active = struct_value
+            .get("is_active")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_bool()
+            .unwrap();
+        let game_state = GameState::from(struct_value.get("game_state").unwrap().as_struct().unwrap());
+        let orb_bag_size = struct_value
+            .get("orb_bag_size")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let orbs_drawn_count = struct_value
+            .get("orbs_drawn_count")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let bombs_drawn_count = struct_value
+            .get("bombs_drawn_count")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let temp_multiplier_active = struct_value
+            .get("temp_multiplier_active")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_bool()
+            .unwrap();
+        let temp_multiplier_value = struct_value
+            .get("temp_multiplier_value")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+
+        Game {
+            player,
+            game_id,
+            health,
+            points,
+            multiplier,
+            cheddah,
+            current_level,
+            is_active,
+            game_state,
+            orb_bag_size,
+            orbs_drawn_count,
+            bombs_drawn_count,
+            temp_multiplier_active,
+            temp_multiplier_value,
+        }
+    }
+}
+
+/// Conversion from Dojo struct to OrbBagSlot
+impl From<&Struct> for OrbBagSlot {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let slot_index = struct_value
+            .get("slot_index")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let is_active = struct_value
+            .get("is_active")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_bool()
+            .unwrap();
+
+        OrbBagSlot {
+            player,
+            game_id,
+            slot_index,
+            orb_type,
+            is_active,
+        }
+    }
+}
+
+/// Conversion from Dojo struct to DrawnOrb
+impl From<&Struct> for DrawnOrb {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let draw_index = struct_value
+            .get("draw_index")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+
+        DrawnOrb {
+            player,
+            game_id,
+            draw_index,
+            orb_type,
+        }
+    }
+}
+
+/// Conversion from Dojo struct to ShopInventory
+impl From<&Struct> for ShopInventory {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let level = struct_value
+            .get("level")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        let slot_index = struct_value
+            .get("slot_index")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u8()
+            .unwrap();
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let base_price = struct_value
+            .get("base_price")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let rarity = ShopRarity::from(struct_value.get("rarity").unwrap().as_struct().unwrap());
+
+        ShopInventory {
+            player,
+            game_id,
+            level,
+            slot_index,
+            orb_type,
+            base_price,
+            rarity,
+        }
+    }
+}
+
+/// Conversion from Dojo struct to PurchaseHistory
+impl From<&Struct> for PurchaseHistory {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let game_id = struct_value
+            .get("game_id")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let purchase_count = struct_value
+            .get("purchase_count")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+
+        PurchaseHistory {
+            player,
+            game_id,
+            orb_type,
+            purchase_count,
+        }
     }
 }
