@@ -634,3 +634,112 @@ impl From<&Struct> for PurchaseHistory {
         }
     }
 }
+
+// Entity update processing systems
+
+/// System for processing position updates
+pub fn process_position_updates(
+    mut ev_position: EventReader<PositionUpdatedEvent>,
+) {
+    for event in ev_position.read() {
+        let position = &event.0;
+        info!("Position updated: player={:?}, x={}, y={}", position.player, position.x, position.y);
+        // Add your position-specific logic here
+    }
+}
+
+/// System for processing moon rocks updates
+pub fn process_moon_rocks_updates(
+    mut ev_moon_rocks: EventReader<MoonRocksUpdatedEvent>,
+) {
+    for event in ev_moon_rocks.read() {
+        let moon_rocks = &event.0;
+        info!("Moon rocks updated: player={:?}, amount={}", moon_rocks.player, moon_rocks.amount);
+        // Add your moon rocks-specific logic here
+    }
+}
+
+/// System for processing game updates
+pub fn process_game_updates(
+    mut ev_game: EventReader<GameUpdatedEvent>,
+) {
+    for event in ev_game.read() {
+        let game = &event.0;
+        info!("Game updated: player={:?}, game_id={}, health={}, points={}", 
+              game.player, game.game_id, game.health, game.points);
+        // Add your game-specific logic here
+    }
+}
+
+/// System for processing game counter updates
+pub fn process_game_counter_updates(
+    mut ev_game_counter: EventReader<GameCounterUpdatedEvent>,
+) {
+    for event in ev_game_counter.read() {
+        let counter = &event.0;
+        info!("Game counter updated: player={:?}, next_game_id={}", 
+              counter.player, counter.next_game_id);
+        // Add your game counter-specific logic here
+    }
+}
+
+/// System for processing active game updates
+pub fn process_active_game_updates(
+    mut ev_active_game: EventReader<ActiveGameUpdatedEvent>,
+) {
+    for event in ev_active_game.read() {
+        let active_game = &event.0;
+        info!("Active game updated: player={:?}, game_id={}", 
+              active_game.player, active_game.game_id);
+        // Add your active game-specific logic here
+    }
+}
+
+/// System for processing orb bag slot updates
+pub fn process_orb_bag_slot_updates(
+    mut ev_orb_bag_slot: EventReader<OrbBagSlotUpdatedEvent>,
+) {
+    for event in ev_orb_bag_slot.read() {
+        let slot = &event.0;
+        info!("Orb bag slot updated: player={:?}, game_id={}, slot_index={}, orb_type={:?}, active={}", 
+              slot.player, slot.game_id, slot.slot_index, slot.orb_type, slot.is_active);
+        // Add your orb bag slot-specific logic here
+    }
+}
+
+/// System for processing drawn orb updates
+pub fn process_drawn_orb_updates(
+    mut ev_drawn_orb: EventReader<DrawnOrbUpdatedEvent>,
+) {
+    for event in ev_drawn_orb.read() {
+        let drawn_orb = &event.0;
+        info!("Drawn orb updated: player={:?}, game_id={}, draw_index={}, orb_type={:?}", 
+              drawn_orb.player, drawn_orb.game_id, drawn_orb.draw_index, drawn_orb.orb_type);
+        // Add your drawn orb-specific logic here
+    }
+}
+
+/// System for processing shop inventory updates
+pub fn process_shop_inventory_updates(
+    mut ev_shop_inventory: EventReader<ShopInventoryUpdatedEvent>,
+) {
+    for event in ev_shop_inventory.read() {
+        let inventory = &event.0;
+        info!("Shop inventory updated: player={:?}, game_id={}, level={}, slot_index={}, orb_type={:?}, price={}, rarity={:?}", 
+              inventory.player, inventory.game_id, inventory.level, inventory.slot_index, 
+              inventory.orb_type, inventory.base_price, inventory.rarity);
+        // Add your shop inventory-specific logic here
+    }
+}
+
+/// System for processing purchase history updates
+pub fn process_purchase_history_updates(
+    mut ev_purchase_history: EventReader<PurchaseHistoryUpdatedEvent>,
+) {
+    for event in ev_purchase_history.read() {
+        let history = &event.0;
+        info!("Purchase history updated: player={:?}, game_id={}, orb_type={:?}, count={}", 
+              history.player, history.game_id, history.orb_type, history.purchase_count);
+        // Add your purchase history-specific logic here
+    }
+}
