@@ -1,7 +1,4 @@
-//! Dojo v2 blockchain communication module.
-//!
-//! This module handles sending transactions and receiving entity updates
-//! from the Dojo blockchain via Torii client.
+//! Main Dojo v2 plugin for Bevy integration.
 
 use bevy::input::ButtonState;
 use bevy::{input::keyboard::KeyboardInput, prelude::*};
@@ -11,7 +8,7 @@ use torii_grpc_client::types::{Pagination, PaginationDirection, Query as ToriiQu
 
 use dojo_bevy_plugin::{DojoEntityUpdatedV2, DojoInitializedEventV2, DojoPluginV2, DojoResourceV2};
 
-use crate::types::*;
+use crate::torii::{constants::*, events::*, systems::*, types::*};
 
 /// Dojo v2 plugin for Bevy integration
 pub struct DojoV2Plugin;
@@ -222,68 +219,4 @@ fn process_entity_update(
             }
         }
     }
-}
-
-/// System for updating cube positions based on position events
-fn update_cube_position(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut entity_tracker: ResMut<EntityTracker>,
-    mut ev_position_updated: EventReader<PositionUpdatedEvent>,
-    mut query: Query<(&mut Transform, &Cube)>,
-) {
-    for ev in ev_position_updated.read() {
-        let Position { x, y, player } = ev.0;
-
-        if !entity_tracker.existing_entities.contains(&player) {
-            spawn_new_cube(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                &mut entity_tracker,
-                player,
-                x,
-                y,
-            );
-        } else {
-            update_existing_cube(&mut query, player, x, y);
-        }
-    }
-}
-
-/// Spawn a new cube for a player
-fn spawn_new_cube(
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    entity_tracker: &mut ResMut<EntityTracker>,
-    player: Felt,
-    x: u32,
-    y: u32,
-) {
-    info!("Spawning new cube for player: {:?}", player);
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(0.5, 0.5, 0.5))),
-        MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.2))),
-        Cube { player },
-        Transform::from_xyz(x as f32, y as f32, 0.0),
-    ));
-
-    entity_tracker.existing_entities.insert(player);
-}
-
-/// Update position of existing cube
-fn update_existing_cube(query: &mut Query<(&mut Transform, &Cube)>, player: Felt, x: u32, y: u32) {
-    for (mut transform, cube) in query.iter_mut() {
-        if cube.player == player {
-            info!("Updating cube position: ({}, {})", x, y);
-            transform.translation = Vec3::new(x as f32, y as f32, 0.0);
-        }
-    }
-}
-
-/// Export the plugin function for lib.rs
-pub fn plugin(app: &mut App) {
-    app.add_plugins(DojoV2Plugin);
 }

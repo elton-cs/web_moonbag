@@ -1,61 +1,12 @@
-//! Type definitions for the Dojo blockchain integration.
-//!
-//! This module contains all the types, components, events, and constants
-//! used for blockchain interaction and game state management.
+//! Type definitions for Dojo blockchain integration.
 
 use bevy::prelude::*;
 use dojo_types::schema::{Enum, Struct};
 use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
-use starknet::macros::selector;
 use std::collections::HashSet;
 
-// Manifest related constants
-pub const TORII_URL: &str = "http://localhost:8080";
-pub const KATANA_URL: &str = "http://0.0.0.0:5050";
-
-pub const WORLD_ADDRESS: Felt =
-    Felt::from_hex_unchecked("0x04d9778a74d2c9e6e7e4a24cbe913998a80de217c66ee173a604d06dea5469c3");
-pub const ACTION_ADDRESS: Felt =
-    Felt::from_hex_unchecked("0x00b056c9813fdc442118bdfead6fda526e5daa5fd7d543304117ed80154ea752");
-pub const SPAWN_SELECTOR: Felt = selector!("spawn");
-pub const MOVE_SELECTOR: Felt = selector!("move");
-
-/// Event triggered when position is updated
-#[derive(Event)]
-pub struct PositionUpdatedEvent(pub Position);
-
-/// Event triggered when moon rocks are updated
-#[derive(Event)]
-pub struct MoonRocksUpdatedEvent(pub MoonRocks);
-
-/// Event triggered when game data is updated
-#[derive(Event)]
-pub struct GameUpdatedEvent(pub Game);
-
-/// Event triggered when game counter is updated
-#[derive(Event)]
-pub struct GameCounterUpdatedEvent(pub GameCounter);
-
-/// Event triggered when active game is updated
-#[derive(Event)]
-pub struct ActiveGameUpdatedEvent(pub ActiveGame);
-
-/// Event triggered when orb bag slot is updated
-#[derive(Event)]
-pub struct OrbBagSlotUpdatedEvent(pub OrbBagSlot);
-
-/// Event triggered when drawn orb is updated
-#[derive(Event)]
-pub struct DrawnOrbUpdatedEvent(pub DrawnOrb);
-
-/// Event triggered when shop inventory is updated
-#[derive(Event)]
-pub struct ShopInventoryUpdatedEvent(pub ShopInventory);
-
-/// Event triggered when purchase history is updated
-#[derive(Event)]
-pub struct PurchaseHistoryUpdatedEvent(pub PurchaseHistory);
+// ==================== COMPONENTS ====================
 
 /// Component representing a player cube
 #[derive(Component)]
@@ -63,11 +14,15 @@ pub struct Cube {
     pub player: Felt,
 }
 
+// ==================== RESOURCES ====================
+
 /// Resource for tracking existing entities
 #[derive(Resource, Default)]
 pub struct EntityTracker {
     pub existing_entities: HashSet<Felt>,
 }
+
+// ==================== GAME TYPES ====================
 
 /// The position of the player in the game
 #[derive(Component, Debug, Clone, Copy)]
@@ -75,35 +30,6 @@ pub struct Position {
     pub player: Felt,
     pub x: u32,
     pub y: u32,
-}
-
-/// Manual conversion from Dojo struct to Position
-impl From<&Struct> for Position {
-    fn from(struct_value: &Struct) -> Self {
-        let player = struct_value
-            .get("player")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_contract_address()
-            .unwrap();
-        let x = struct_value
-            .get("x")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_u32()
-            .unwrap();
-        let y = struct_value
-            .get("y")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_u32()
-            .unwrap();
-
-        Position { player, x, y }
-    }
 }
 
 /// Direction enum for movement
@@ -114,6 +40,119 @@ pub enum Direction {
     Up = 2,
     Down = 3,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MoonRocks {
+    pub player: Felt,
+    pub amount: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Game {
+    pub player: Felt,
+    pub game_id: u32,
+    pub health: u8,
+    pub points: u32,
+    pub multiplier: u32,
+    pub cheddah: u32,
+    pub current_level: u8,
+    pub is_active: bool,
+    pub game_state: GameState,
+    pub orb_bag_size: u32,
+    pub orbs_drawn_count: u32,
+    pub bombs_drawn_count: u32,
+    pub temp_multiplier_active: bool,
+    pub temp_multiplier_value: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GameCounter {
+    pub player: Felt,
+    pub next_game_id: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ActiveGame {
+    pub player: Felt,
+    pub game_id: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrbBagSlot {
+    pub player: Felt,
+    pub game_id: u32,
+    pub slot_index: u32,
+    pub orb_type: OrbType,
+    pub is_active: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DrawnOrb {
+    pub player: Felt,
+    pub game_id: u32,
+    pub draw_index: u32,
+    pub orb_type: OrbType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShopInventory {
+    pub player: Felt,
+    pub game_id: u32,
+    pub level: u8,
+    pub slot_index: u8,
+    pub orb_type: OrbType,
+    pub base_price: u32,
+    pub rarity: ShopRarity,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PurchaseHistory {
+    pub player: Felt,
+    pub game_id: u32,
+    pub orb_type: OrbType,
+    pub purchase_count: u32,
+}
+
+// ==================== ENUMS ====================
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub enum OrbType {
+    SingleBomb,
+    DoubleBomb,
+    TripleBomb,
+    FivePoints,
+    DoubleMultiplier,
+    RemainingOrbs,
+    BombCounter,
+    Health,
+    CheddahBomb,
+    SevenPoints,
+    MoonRock,
+    HalfMultiplier,
+    EightPoints,
+    NinePoints,
+    NextPoints2x,
+    Multiplier1_5x,
+    BigHealth,
+    BigMoonRock,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum GameState {
+    Active,
+    LevelComplete,
+    GameWon,
+    GameLost,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ShopRarity {
+    Common,
+    Rare,
+    Cosmic,
+}
+
+// ==================== CONVERSIONS ====================
 
 impl From<Direction> for Felt {
     fn from(direction: Direction) -> Self {
@@ -179,113 +218,33 @@ impl From<&Enum> for OrbType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MoonRocks {
-    pub player: Felt,
-    pub amount: u32,
-}
+/// Conversion from Dojo struct to Position
+impl From<&Struct> for Position {
+    fn from(struct_value: &Struct) -> Self {
+        let player = struct_value
+            .get("player")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_contract_address()
+            .unwrap();
+        let x = struct_value
+            .get("x")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
+        let y = struct_value
+            .get("y")
+            .unwrap()
+            .as_primitive()
+            .unwrap()
+            .as_u32()
+            .unwrap();
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Game {
-    pub player: Felt,
-    pub game_id: u32,
-    pub health: u8,
-    pub points: u32,
-    pub multiplier: u32,
-    pub cheddah: u32,
-    pub current_level: u8,
-    pub is_active: bool,
-    pub game_state: GameState,
-    pub orb_bag_size: u32,
-    pub orbs_drawn_count: u32,
-    pub bombs_drawn_count: u32,
-    pub temp_multiplier_active: bool,
-    pub temp_multiplier_value: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GameCounter {
-    pub player: Felt,
-    pub next_game_id: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ActiveGame {
-    pub player: Felt,
-    pub game_id: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
-pub enum OrbType {
-    SingleBomb,
-    DoubleBomb,
-    TripleBomb,
-    FivePoints,
-    DoubleMultiplier,
-    RemainingOrbs,
-    BombCounter,
-    Health,
-    CheddahBomb,
-    SevenPoints,
-    MoonRock,
-    HalfMultiplier,
-    EightPoints,
-    NinePoints,
-    NextPoints2x,
-    Multiplier1_5x,
-    BigHealth,
-    BigMoonRock,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum GameState {
-    Active,
-    LevelComplete,
-    GameWon,
-    GameLost,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct OrbBagSlot {
-    pub player: Felt,
-    pub game_id: u32,
-    pub slot_index: u32,
-    pub orb_type: OrbType,
-    pub is_active: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct DrawnOrb {
-    pub player: Felt,
-    pub game_id: u32,
-    pub draw_index: u32,
-    pub orb_type: OrbType,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ShopRarity {
-    Common,
-    Rare,
-    Cosmic,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ShopInventory {
-    pub player: Felt,
-    pub game_id: u32,
-    pub level: u8,
-    pub slot_index: u8,
-    pub orb_type: OrbType,
-    pub base_price: u32,
-    pub rarity: ShopRarity,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PurchaseHistory {
-    pub player: Felt,
-    pub game_id: u32,
-    pub orb_type: OrbType,
-    pub purchase_count: u32,
+        Position { player, x, y }
+    }
 }
 
 /// Conversion from Dojo struct to MoonRocks
@@ -632,114 +591,5 @@ impl From<&Struct> for PurchaseHistory {
             orb_type,
             purchase_count,
         }
-    }
-}
-
-// Entity update processing systems
-
-/// System for processing position updates
-pub fn process_position_updates(
-    mut ev_position: EventReader<PositionUpdatedEvent>,
-) {
-    for event in ev_position.read() {
-        let position = &event.0;
-        info!("Position updated: player={:?}, x={}, y={}", position.player, position.x, position.y);
-        // Add your position-specific logic here
-    }
-}
-
-/// System for processing moon rocks updates
-pub fn process_moon_rocks_updates(
-    mut ev_moon_rocks: EventReader<MoonRocksUpdatedEvent>,
-) {
-    for event in ev_moon_rocks.read() {
-        let moon_rocks = &event.0;
-        info!("Moon rocks updated: player={:?}, amount={}", moon_rocks.player, moon_rocks.amount);
-        // Add your moon rocks-specific logic here
-    }
-}
-
-/// System for processing game updates
-pub fn process_game_updates(
-    mut ev_game: EventReader<GameUpdatedEvent>,
-) {
-    for event in ev_game.read() {
-        let game = &event.0;
-        info!("Game updated: player={:?}, game_id={}, health={}, points={}", 
-              game.player, game.game_id, game.health, game.points);
-        // Add your game-specific logic here
-    }
-}
-
-/// System for processing game counter updates
-pub fn process_game_counter_updates(
-    mut ev_game_counter: EventReader<GameCounterUpdatedEvent>,
-) {
-    for event in ev_game_counter.read() {
-        let counter = &event.0;
-        info!("Game counter updated: player={:?}, next_game_id={}", 
-              counter.player, counter.next_game_id);
-        // Add your game counter-specific logic here
-    }
-}
-
-/// System for processing active game updates
-pub fn process_active_game_updates(
-    mut ev_active_game: EventReader<ActiveGameUpdatedEvent>,
-) {
-    for event in ev_active_game.read() {
-        let active_game = &event.0;
-        info!("Active game updated: player={:?}, game_id={}", 
-              active_game.player, active_game.game_id);
-        // Add your active game-specific logic here
-    }
-}
-
-/// System for processing orb bag slot updates
-pub fn process_orb_bag_slot_updates(
-    mut ev_orb_bag_slot: EventReader<OrbBagSlotUpdatedEvent>,
-) {
-    for event in ev_orb_bag_slot.read() {
-        let slot = &event.0;
-        info!("Orb bag slot updated: player={:?}, game_id={}, slot_index={}, orb_type={:?}, active={}", 
-              slot.player, slot.game_id, slot.slot_index, slot.orb_type, slot.is_active);
-        // Add your orb bag slot-specific logic here
-    }
-}
-
-/// System for processing drawn orb updates
-pub fn process_drawn_orb_updates(
-    mut ev_drawn_orb: EventReader<DrawnOrbUpdatedEvent>,
-) {
-    for event in ev_drawn_orb.read() {
-        let drawn_orb = &event.0;
-        info!("Drawn orb updated: player={:?}, game_id={}, draw_index={}, orb_type={:?}", 
-              drawn_orb.player, drawn_orb.game_id, drawn_orb.draw_index, drawn_orb.orb_type);
-        // Add your drawn orb-specific logic here
-    }
-}
-
-/// System for processing shop inventory updates
-pub fn process_shop_inventory_updates(
-    mut ev_shop_inventory: EventReader<ShopInventoryUpdatedEvent>,
-) {
-    for event in ev_shop_inventory.read() {
-        let inventory = &event.0;
-        info!("Shop inventory updated: player={:?}, game_id={}, level={}, slot_index={}, orb_type={:?}, price={}, rarity={:?}", 
-              inventory.player, inventory.game_id, inventory.level, inventory.slot_index, 
-              inventory.orb_type, inventory.base_price, inventory.rarity);
-        // Add your shop inventory-specific logic here
-    }
-}
-
-/// System for processing purchase history updates
-pub fn process_purchase_history_updates(
-    mut ev_purchase_history: EventReader<PurchaseHistoryUpdatedEvent>,
-) {
-    for event in ev_purchase_history.read() {
-        let history = &event.0;
-        info!("Purchase history updated: player={:?}, game_id={}, orb_type={:?}, count={}", 
-              history.player, history.game_id, history.orb_type, history.purchase_count);
-        // Add your purchase history-specific logic here
     }
 }

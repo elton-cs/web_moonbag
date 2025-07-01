@@ -1,5 +1,4 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
-mod types;
 mod torii;
 
 pub struct AppPlugin;
