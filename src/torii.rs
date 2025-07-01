@@ -193,18 +193,18 @@ fn process_entity_update(
             "di-MoonRocks" => {
                 ev_moon_rocks_updated.write(MoonRocksUpdatedEvent(m.into()));
             }
-            // "di-Game" => {
-            //     ev_game_updated.write(GameUpdatedEvent(m.into()));
-            // }
+            "di-Game" => {
+                ev_game_updated.write(GameUpdatedEvent(m.into()));
+            }
             "di-GameCounter" => {
                 ev_game_counter_updated.write(GameCounterUpdatedEvent(m.into()));
             }
             "di-ActiveGame" => {
                 ev_active_game_updated.write(ActiveGameUpdatedEvent(m.into()));
             }
-            // "di-OrbBagSlot" => {
-            //     ev_orb_bag_slot_updated.write(OrbBagSlotUpdatedEvent(m.into()));
-            // }
+            "di-OrbBagSlot" => {
+                ev_orb_bag_slot_updated.write(OrbBagSlotUpdatedEvent(m.into()));
+            }
             "di-DrawnOrb" => {
                 ev_drawn_orb_updated.write(DrawnOrbUpdatedEvent(m.into()));
             }

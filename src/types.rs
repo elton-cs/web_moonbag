@@ -4,7 +4,7 @@
 //! used for blockchain interaction and game state management.
 
 use bevy::prelude::*;
-use dojo_types::schema::Struct;
+use dojo_types::schema::{Enum, Struct};
 use serde::{Deserialize, Serialize};
 use starknet::core::types::Felt;
 use starknet::macros::selector;
@@ -121,17 +121,10 @@ impl From<Direction> for Felt {
     }
 }
 
-/// Conversion from Dojo struct to GameState
-impl From<&Struct> for GameState {
-    fn from(struct_value: &Struct) -> Self {
-        // For enums, extract the variant value from the discriminant
-        let state_value = struct_value
-            .get("variant")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_u8()
-            .unwrap();
+/// Conversion from Dojo enum to GameState
+impl From<&dojo_types::schema::Enum> for GameState {
+    fn from(enum_value: &dojo_types::schema::Enum) -> Self {
+        let state_value = enum_value.option.unwrap_or(0);
         
         match state_value {
             0 => GameState::Active,
@@ -143,16 +136,10 @@ impl From<&Struct> for GameState {
     }
 }
 
-/// Conversion from Dojo struct to ShopRarity
-impl From<&Struct> for ShopRarity {
-    fn from(struct_value: &Struct) -> Self {
-        let rarity_value = struct_value
-            .get("variant")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_u8()
-            .unwrap();
+/// Conversion from Dojo enum to ShopRarity
+impl From<&Enum> for ShopRarity {
+    fn from(enum_value: &Enum) -> Self {
+        let rarity_value = enum_value.option.unwrap_or(0);
         
         match rarity_value {
             0 => ShopRarity::Common,
@@ -163,16 +150,10 @@ impl From<&Struct> for ShopRarity {
     }
 }
 
-/// Conversion from Dojo struct to OrbType
-impl From<&Struct> for OrbType {
-    fn from(struct_value: &Struct) -> Self {
-        let orb_value = struct_value
-            .get("variant")
-            .unwrap()
-            .as_primitive()
-            .unwrap()
-            .as_u8()
-            .unwrap();
+/// Conversion from Dojo enum to OrbType
+impl From<&Enum> for OrbType {
+    fn from(enum_value: &Enum) -> Self {
+        let orb_value = enum_value.option.unwrap_or(0);
         
         match orb_value {
             0 => OrbType::SingleBomb,
@@ -432,7 +413,7 @@ impl From<&Struct> for Game {
             .unwrap()
             .as_bool()
             .unwrap();
-        let game_state = GameState::from(struct_value.get("game_state").unwrap().as_struct().unwrap());
+        let game_state = GameState::from(struct_value.get("game_state").unwrap().as_enum().unwrap());
         let orb_bag_size = struct_value
             .get("orb_bag_size")
             .unwrap()
@@ -512,7 +493,7 @@ impl From<&Struct> for OrbBagSlot {
             .unwrap()
             .as_u32()
             .unwrap();
-        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_enum().unwrap());
         let is_active = struct_value
             .get("is_active")
             .unwrap()
@@ -555,7 +536,7 @@ impl From<&Struct> for DrawnOrb {
             .unwrap()
             .as_u32()
             .unwrap();
-        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_enum().unwrap());
 
         DrawnOrb {
             player,
@@ -597,7 +578,7 @@ impl From<&Struct> for ShopInventory {
             .unwrap()
             .as_u8()
             .unwrap();
-        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_enum().unwrap());
         let base_price = struct_value
             .get("base_price")
             .unwrap()
@@ -605,7 +586,7 @@ impl From<&Struct> for ShopInventory {
             .unwrap()
             .as_u32()
             .unwrap();
-        let rarity = ShopRarity::from(struct_value.get("rarity").unwrap().as_struct().unwrap());
+        let rarity = ShopRarity::from(struct_value.get("rarity").unwrap().as_enum().unwrap());
 
         ShopInventory {
             player,
@@ -636,7 +617,7 @@ impl From<&Struct> for PurchaseHistory {
             .unwrap()
             .as_u32()
             .unwrap();
-        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_struct().unwrap());
+        let orb_type = OrbType::from(struct_value.get("orb_type").unwrap().as_enum().unwrap());
         let purchase_count = struct_value
             .get("purchase_count")
             .unwrap()
