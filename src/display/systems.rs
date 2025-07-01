@@ -1,147 +1,391 @@
-//! UI update systems that react to torii events using modern Bevy 0.16 syntax
+//! Simple UI update systems for displaying all Torii events using modern Bevy 0.16 syntax
 
 use bevy::prelude::*;
 use crate::torii::events::*;
 use crate::torii::types::*;
 use super::components::*;
+use super::styles::*;
 
-/// Setup the initial display UI
+/// Setup the simple event data view UI
 pub fn setup_display_ui(mut commands: Commands) {
-    // Game Stats Display
+    // Main container
     commands.spawn((
-        Text::new("Health: 0 | Points: 0 | Multiplier: 1x | Level: 1 | Cheddah: 0"),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::WHITE),
         Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(10.0),
-            left: Val::Px(10.0),
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            flex_direction: FlexDirection::Column,
+            padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
             ..default()
         },
-        HealthDisplay,
-    ));
-    
-    // Moon Rocks Display
-    commands.spawn((
-        Text::new("Moon Rocks: 0"),
-        TextFont {
-            font_size: 16.0,
-            ..default()
-        },
-        TextColor(Color::srgb(0.0, 1.0, 1.0)), // Cyan
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(40.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        MoonRocksDisplay,
-    ));
-    
-    // Position Display
-    commands.spawn((
-        Text::new("Position: (0, 0)"),
-        TextFont {
-            font_size: 16.0,
-            ..default()
-        },
-        TextColor(Color::srgb(1.0, 1.0, 0.0)), // Yellow
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(70.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        PositionDisplay,
-    ));
-    
-    // Game State Display
-    commands.spawn((
-        Text::new("Game State: Inactive"),
-        TextFont {
-            font_size: 16.0,
-            ..default()
-        },
-        TextColor(Color::srgb(0.8, 0.8, 0.8)), // Light Gray
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(100.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        GameStateDisplay,
-    ));
-    
-    // Orb Bag Panel Header
-    commands.spawn((
-        Text::new("Orb Bag Slots:"),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::srgb(0.0, 1.0, 0.0)), // Green
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(140.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        OrbBagPanel,
-    ));
-    
-    // Shop Panel Header
-    commands.spawn((
-        Text::new("Shop Items:"),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::srgb(1.0, 0.5, 0.0)), // Orange
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(300.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        ShopPanel,
-    ));
-    
-    // Drawn Orbs Panel Header
-    commands.spawn((
-        Text::new("Recent Drawn Orbs:"),
-        TextFont {
-            font_size: 18.0,
-            ..default()
-        },
-        TextColor(Color::srgb(1.0, 0.0, 1.0)), // Magenta
-        Node {
-            position_type: PositionType::Absolute,
-            top: Val::Px(500.0),
-            left: Val::Px(10.0),
-            ..default()
-        },
-        DrawnOrbsPanel,
-    ));
+        BackgroundColor(Colors::BACKGROUND),
+        DojoDisplayRoot,
+    )).with_children(|parent| {
+        // Title
+        parent.spawn((
+            Text::new("🌙 Web Moonbag - Blockchain Game Data"),
+            TextFont {
+                font_size: Typography::TITLE_SIZE,
+                ..default()
+            },
+            TextColor(Colors::ACCENT_BLUE),
+            Node {
+                margin: UiRect::bottom(Val::Px(Spacing::LARGE)),
+                ..default()
+            },
+        ));
+
+        // Game Stats Section
+        parent.spawn((
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                margin: UiRect::bottom(Val::Px(Spacing::LARGE)),
+                padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
+                border: UiRect::all(Val::Px(2.0)),
+                ..default()
+            },
+            BackgroundColor(Colors::PANEL_BACKGROUND),
+            BorderColor(Colors::ACCENT_GREEN),
+        )).with_children(|section| {
+            // Game Stats Header
+            section.spawn((
+                Text::new("🎮 Game Statistics"),
+                TextFont {
+                    font_size: Typography::HEADER_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_GREEN),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::MEDIUM)),
+                    ..default()
+                },
+            ));
+
+            // Health Display
+            section.spawn((
+                Text::new("Health: 0"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_RED),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                HealthDisplay,
+            ));
+
+            // Points Display
+            section.spawn((
+                Text::new("Points: 0"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_YELLOW),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                PointsDisplay,
+            ));
+
+            // Level Display
+            section.spawn((
+                Text::new("Level: 1"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_BLUE),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                LevelDisplay,
+            ));
+
+            // Multiplier Display
+            section.spawn((
+                Text::new("Multiplier: 1x"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_PRIMARY),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                MultiplierDisplay,
+            ));
+
+            // Cheddah Display
+            section.spawn((
+                Text::new("Cheddah: 0"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_YELLOW),
+                CheddahDisplay,
+            ));
+        });
+
+        // Player Data Section
+        parent.spawn((
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                margin: UiRect::bottom(Val::Px(Spacing::LARGE)),
+                padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
+                border: UiRect::all(Val::Px(2.0)),
+                ..default()
+            },
+            BackgroundColor(Colors::PANEL_BACKGROUND),
+            BorderColor(Colors::ACCENT_BLUE),
+        )).with_children(|section| {
+            // Player Data Header
+            section.spawn((
+                Text::new("👤 Player Data"),
+                TextFont {
+                    font_size: Typography::HEADER_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_BLUE),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::MEDIUM)),
+                    ..default()
+                },
+            ));
+
+            // Position Display
+            section.spawn((
+                Text::new("Position: (0, 0)"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_YELLOW),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                PositionDisplay,
+            ));
+
+            // Moon Rocks Display
+            section.spawn((
+                Text::new("Moon Rocks: 0"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Color::srgb(0.0, 1.0, 1.0)),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                MoonRocksDisplay,
+            ));
+
+            // Game Counter Display
+            section.spawn((
+                Text::new("Next Game ID: 0"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_SECONDARY),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                GameCounterDisplay,
+            ));
+
+            // Active Game Display
+            section.spawn((
+                Text::new("Active Game: None"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_SECONDARY),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                ActiveGameDisplay,
+            ));
+
+            // Game State Display
+            section.spawn((
+                Text::new("Game State: Inactive"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_SECONDARY),
+                GameStateDisplay,
+            ));
+        });
+
+        // Game Objects Section
+        parent.spawn((
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                margin: UiRect::bottom(Val::Px(Spacing::LARGE)),
+                padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
+                border: UiRect::all(Val::Px(2.0)),
+                ..default()
+            },
+            BackgroundColor(Colors::PANEL_BACKGROUND),
+            BorderColor(Colors::ACCENT_GREEN),
+        )).with_children(|section| {
+            // Game Objects Header
+            section.spawn((
+                Text::new("🎯 Game Objects"),
+                TextFont {
+                    font_size: Typography::HEADER_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_GREEN),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::MEDIUM)),
+                    ..default()
+                },
+            ));
+
+            // Orb Bag Panel
+            section.spawn((
+                Text::new("Orb Bag Slots: (empty)"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::ACCENT_GREEN),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                OrbBagPanel,
+            ));
+
+            // Shop Panel
+            section.spawn((
+                Text::new("Shop Items: (empty)"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Color::srgb(1.0, 0.5, 0.0)),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                ShopPanel,
+            ));
+
+            // Drawn Orbs Panel
+            section.spawn((
+                Text::new("Recent Drawn Orbs: (empty)"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Color::srgb(1.0, 0.0, 1.0)),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::SMALL)),
+                    ..default()
+                },
+                DrawnOrbsPanel,
+            ));
+
+            // Purchase History Panel
+            section.spawn((
+                Text::new("Purchase History: (empty)"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Color::srgb(1.0, 0.0, 1.0)),
+                PurchaseHistoryPanel,
+            ));
+        });
+
+        // Controls Information
+        parent.spawn((
+            Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                padding: UiRect::all(Val::Px(Spacing::MEDIUM)),
+                border: UiRect::all(Val::Px(2.0)),
+                ..default()
+            },
+            BackgroundColor(Colors::PANEL_BACKGROUND),
+            BorderColor(Colors::BORDER),
+        )).with_children(|section| {
+            section.spawn((
+                Text::new("🎮 Controls"),
+                TextFont {
+                    font_size: Typography::HEADER_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_PRIMARY),
+                Node {
+                    margin: UiRect::bottom(Val::Px(Spacing::MEDIUM)),
+                    ..default()
+                },
+            ));
+
+            section.spawn((
+                Text::new("C - Connect to blockchain\nSpace - Spawn player\nS - Subscribe to entities\nArrow Keys - Move player"),
+                TextFont {
+                    font_size: Typography::BODY_SIZE,
+                    ..default()
+                },
+                TextColor(Colors::TEXT_SECONDARY),
+            ));
+        });
+    });
 }
 
 /// Update game stats display when game data changes
 pub fn update_game_stats_display(
     mut events: EventReader<GameUpdatedEvent>,
     mut display_data: ResMut<DisplayData>,
-    mut query: Query<&mut Text, With<HealthDisplay>>,
+    mut health_query: Query<&mut Text, (With<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
+    mut points_query: Query<&mut Text, (With<PointsDisplay>, Without<HealthDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
+    mut level_query: Query<&mut Text, (With<LevelDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
+    mut multiplier_query: Query<&mut Text, (With<MultiplierDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<CheddahDisplay>)>,
+    mut cheddah_query: Query<&mut Text, (With<CheddahDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>)>,
 ) {
     for event in events.read() {
         display_data.current_game = Some(event.0.clone());
         let game = &event.0;
         
-        for mut text in query.iter_mut() {
-            *text = Text::new(format!(
-                "Health: {} | Points: {} | Multiplier: {}x | Level: {} | Cheddah: {}",
-                game.health, game.points, game.multiplier, game.current_level, game.cheddah
-            ));
+        // Update individual displays
+        for mut text in health_query.iter_mut() {
+            *text = Text::new(format!("Health: {}", game.health));
+        }
+        
+        for mut text in points_query.iter_mut() {
+            *text = Text::new(format!("Points: {}", game.points));
+        }
+        
+        for mut text in level_query.iter_mut() {
+            *text = Text::new(format!("Level: {}", game.current_level));
+        }
+        
+        for mut text in multiplier_query.iter_mut() {
+            *text = Text::new(format!("Multiplier: {}x", game.multiplier));
+        }
+        
+        for mut text in cheddah_query.iter_mut() {
+            *text = Text::new(format!("Cheddah: {}", game.cheddah));
         }
     }
 }
@@ -195,12 +439,41 @@ pub fn update_game_state_display(
     }
 }
 
-/// Update orb bag display by adding new slot information
+/// Update game counter display
+pub fn update_game_counter_display(
+    mut events: EventReader<GameCounterUpdatedEvent>,
+    mut display_data: ResMut<DisplayData>,
+    mut query: Query<&mut Text, With<GameCounterDisplay>>,
+) {
+    for event in events.read() {
+        display_data.game_counter = Some(event.0.clone());
+        
+        for mut text in query.iter_mut() {
+            *text = Text::new(format!("Next Game ID: {}", event.0.next_game_id));
+        }
+    }
+}
+
+/// Update active game display
+pub fn update_active_game_display(
+    mut events: EventReader<ActiveGameUpdatedEvent>,
+    mut display_data: ResMut<DisplayData>,
+    mut query: Query<&mut Text, With<ActiveGameDisplay>>,
+) {
+    for event in events.read() {
+        display_data.active_game = Some(event.0.clone());
+        
+        for mut text in query.iter_mut() {
+            *text = Text::new(format!("Active Game: {}", event.0.game_id));
+        }
+    }
+}
+
+/// Update orb bag display by showing a summary
 pub fn update_orb_bag_display(
     mut events: EventReader<OrbBagSlotUpdatedEvent>,
     mut display_data: ResMut<DisplayData>,
-    mut commands: Commands,
-    _orb_bag_query: Query<Entity, With<OrbBagPanel>>,
+    mut query: Query<&mut Text, With<OrbBagPanel>>,
 ) {
     for event in events.read() {
         let slot = event.0.clone();
@@ -212,38 +485,29 @@ pub fn update_orb_bag_display(
             display_data.orb_bag_slots.push(slot.clone());
         }
         
-        // Add text display for this slot (simplified approach)
-        let y_offset = 170.0 + (slot.slot_index as f32 * 25.0);
-        commands.spawn((
-            Text::new(format!(
-                "Slot {}: {} (Active: {})",
-                slot.slot_index,
-                format_orb_type(&slot.orb_type),
-                slot.is_active
-            )),
-            TextFont {
-                font_size: 14.0,
-                ..default()
-            },
-            TextColor(Color::srgb(0.7, 1.0, 0.7)), // Light Green
-            Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(y_offset),
-                left: Val::Px(20.0),
-                ..default()
-            },
-            OrbBagSlotDisplay {
-                slot_index: slot.slot_index,
-            },
-        ));
+        // Update summary display
+        let active_slots: Vec<_> = display_data.orb_bag_slots.iter()
+            .filter(|s| s.is_active)
+            .collect();
+            
+        for mut text in query.iter_mut() {
+            if active_slots.is_empty() {
+                *text = Text::new("Orb Bag Slots: (empty)".to_string());
+            } else {
+                let slot_summaries: Vec<String> = active_slots.iter()
+                    .map(|s| format!("{}: {}", s.slot_index, format_orb_type(&s.orb_type)))
+                    .collect();
+                *text = Text::new(format!("Orb Bag Slots: {}", slot_summaries.join(", ")));
+            }
+        }
     }
 }
 
-/// Update shop display by adding new shop items
+/// Update shop display by showing a summary
 pub fn update_shop_display(
     mut events: EventReader<ShopInventoryUpdatedEvent>,
     mut display_data: ResMut<DisplayData>,
-    mut commands: Commands,
+    mut query: Query<&mut Text, With<ShopPanel>>,
 ) {
     for event in events.read() {
         let item = event.0.clone();
@@ -255,39 +519,31 @@ pub fn update_shop_display(
             display_data.shop_items.push(item.clone());
         }
         
-        // Add text display for this shop item
-        let y_offset = 330.0 + (item.slot_index as f32 * 25.0);
-        commands.spawn((
-            Text::new(format!(
-                "Shop {}: {} - {} coins (Rarity: {:?})",
-                item.slot_index,
-                format_orb_type(&item.orb_type),
-                item.base_price,
-                item.rarity
-            )),
-            TextFont {
-                font_size: 14.0,
-                ..default()
-            },
-            TextColor(Color::srgb(1.0, 0.8, 0.4)), // Light Orange
-            Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(y_offset),
-                left: Val::Px(20.0),
-                ..default()
-            },
-            ShopItemDisplay {
-                slot_index: item.slot_index,
-            },
-        ));
+        // Update summary display
+        for mut text in query.iter_mut() {
+            if display_data.shop_items.is_empty() {
+                *text = Text::new("Shop Items: (empty)".to_string());
+            } else {
+                let item_summaries: Vec<String> = display_data.shop_items.iter()
+                    .take(3) // Show only first 3 items
+                    .map(|i| format!("{} ({})", format_orb_type(&i.orb_type), i.base_price))
+                    .collect();
+                let summary = if display_data.shop_items.len() > 3 {
+                    format!("Shop Items: {} (+{} more)", item_summaries.join(", "), display_data.shop_items.len() - 3)
+                } else {
+                    format!("Shop Items: {}", item_summaries.join(", "))
+                };
+                *text = Text::new(summary);
+            }
+        }
     }
 }
 
-/// Update drawn orbs display by adding new orb history
+/// Update drawn orbs display by showing a summary
 pub fn update_drawn_orbs_display(
-    mut events: EventReader<DrawnOrbAddedEvent>,
+    mut events: EventReader<DrawnOrbUpdatedEvent>,
     mut display_data: ResMut<DisplayData>,
-    mut commands: Commands,
+    mut query: Query<&mut Text, With<DrawnOrbsPanel>>,
 ) {
     for event in events.read() {
         let drawn_orb = event.0.clone();
@@ -298,78 +554,55 @@ pub fn update_drawn_orbs_display(
             display_data.drawn_orbs.remove(0);
         }
         
-        // Add text display for this drawn orb
-        let orb_count = display_data.drawn_orbs.len();
-        let y_offset = 530.0 + ((orb_count - 1) as f32 * 20.0);
-        commands.spawn((
-            Text::new(format!(
-                "Draw #{}: {} (Game: {})",
-                drawn_orb.draw_index,
-                format_orb_type(&drawn_orb.orb_type),
-                drawn_orb.game_id
-            )),
-            TextFont {
-                font_size: 12.0,
-                ..default()
-            },
-            TextColor(Color::srgb(1.0, 0.7, 1.0)), // Light Magenta
-            Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(y_offset),
-                left: Val::Px(20.0),
-                ..default()
-            },
-        ));
+        // Update summary display
+        for mut text in query.iter_mut() {
+            if display_data.drawn_orbs.is_empty() {
+                *text = Text::new("Recent Drawn Orbs: (empty)".to_string());
+            } else {
+                let recent_orbs: Vec<String> = display_data.drawn_orbs.iter()
+                    .rev()
+                    .take(3) // Show last 3 orbs
+                    .map(|o| format_orb_type(&o.orb_type).to_string())
+                    .collect();
+                let summary = if display_data.drawn_orbs.len() > 3 {
+                    format!("Recent Drawn Orbs: {} (+{} more)", recent_orbs.join(", "), display_data.drawn_orbs.len() - 3)
+                } else {
+                    format!("Recent Drawn Orbs: {}", recent_orbs.join(", "))
+                };
+                *text = Text::new(summary);
+            }
+        }
     }
 }
 
-/// Update game counter display
-pub fn update_game_counter_display(
-    mut events: EventReader<GameCounterUpdatedEvent>,
-    mut commands: Commands,
+/// Update purchase history display by showing a summary
+pub fn update_purchase_history_display(
+    mut events: EventReader<PurchaseHistoryUpdatedEvent>,
+    mut display_data: ResMut<DisplayData>,
+    mut query: Query<&mut Text, With<PurchaseHistoryPanel>>,
 ) {
     for event in events.read() {
-        let counter = &event.0;
+        let history = event.0.clone();
+        display_data.purchase_history.push(history.clone());
         
-        commands.spawn((
-            Text::new(format!("Next Game ID: {}", counter.next_game_id)),
-            TextFont {
-                font_size: 14.0,
-                ..default()
-            },
-            TextColor(Color::srgb(0.8, 0.8, 1.0)), // Light Blue
-            Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(130.0),
-                left: Val::Px(10.0),
-                ..default()
-            },
-        ));
-    }
-}
-
-/// Update active game display
-pub fn update_active_game_display(
-    mut events: EventReader<ActiveGameUpdatedEvent>,
-    mut commands: Commands,
-) {
-    for event in events.read() {
-        let active_game = &event.0;
-        
-        commands.spawn((
-            Text::new(format!("Active Game: {}", active_game.game_id)),
-            TextFont {
-                font_size: 14.0,
-                ..default()
-            },
-            TextColor(Color::srgb(1.0, 1.0, 0.8)), // Light Yellow
-            Node {
-                position_type: PositionType::Absolute,
-                top: Val::Px(115.0),
-                left: Val::Px(10.0),
-                ..default()
-            },
-        ));
+        // Update summary display
+        for mut text in query.iter_mut() {
+            if display_data.purchase_history.is_empty() {
+                *text = Text::new("Purchase History: (empty)".to_string());
+            } else {
+                let recent_purchases: Vec<String> = display_data.purchase_history.iter()
+                    .rev()
+                    .take(3) // Show last 3 purchases
+                    .map(|p| format!("{} x{}", format_orb_type(&p.orb_type), p.purchase_count))
+                    .collect();
+                let summary = if display_data.purchase_history.len() > 3 {
+                    format!("Purchase History: {} (+{} more)", recent_purchases.join(", "), display_data.purchase_history.len() - 3)
+                } else {
+                    format!("Purchase History: {}", recent_purchases.join(", "))
+                };
+                *text = Text::new(summary);
+            }
+        }
     }
 }
 

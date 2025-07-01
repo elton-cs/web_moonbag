@@ -1,4 +1,5 @@
 # Rust builds
 /target
+bevy_ui.txt
 # This file contains environment-specific configuration like linker settings
 .cargo/config.toml
