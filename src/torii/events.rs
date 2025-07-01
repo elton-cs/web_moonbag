@@ -40,3 +40,7 @@ pub struct ShopInventoryUpdatedEvent(pub ShopInventory);
 /// Event triggered when purchase history is updated
 #[derive(Event)]
 pub struct PurchaseHistoryUpdatedEvent(pub PurchaseHistory);
+
+/// Event triggered when a new orb is drawn (for display history)
+#[derive(Event)]
+pub struct DrawnOrbAddedEvent(pub DrawnOrb);
