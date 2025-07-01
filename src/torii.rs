@@ -22,6 +22,14 @@ impl Plugin for DojoV2Plugin {
             .init_resource::<DojoResourceV2>()
             .init_resource::<EntityTracker>()
             .add_event::<PositionUpdatedEvent>()
+            .add_event::<MoonRocksUpdatedEvent>()
+            .add_event::<GameUpdatedEvent>()
+            .add_event::<GameCounterUpdatedEvent>()
+            .add_event::<ActiveGameUpdatedEvent>()
+            .add_event::<OrbBagSlotUpdatedEvent>()
+            .add_event::<DrawnOrbUpdatedEvent>()
+            .add_event::<ShopInventoryUpdatedEvent>()
+            .add_event::<PurchaseHistoryUpdatedEvent>()
             .add_systems(
                 Update,
                 (
@@ -110,6 +118,14 @@ fn on_dojo_events(
     mut ev_initialized: EventReader<DojoInitializedEventV2>,
     mut ev_retrieve_entities: EventReader<DojoEntityUpdatedV2>,
     mut ev_position_updated: EventWriter<PositionUpdatedEvent>,
+    mut ev_moon_rocks_updated: EventWriter<MoonRocksUpdatedEvent>,
+    mut ev_game_updated: EventWriter<GameUpdatedEvent>,
+    mut ev_game_counter_updated: EventWriter<GameCounterUpdatedEvent>,
+    mut ev_active_game_updated: EventWriter<ActiveGameUpdatedEvent>,
+    mut ev_orb_bag_slot_updated: EventWriter<OrbBagSlotUpdatedEvent>,
+    mut ev_drawn_orb_updated: EventWriter<DrawnOrbUpdatedEvent>,
+    mut ev_shop_inventory_updated: EventWriter<ShopInventoryUpdatedEvent>,
+    mut ev_purchase_history_updated: EventWriter<PurchaseHistoryUpdatedEvent>,
 ) {
     for _ in ev_initialized.read() {
         info!("Dojo v2 initialized.");
@@ -117,7 +133,18 @@ fn on_dojo_events(
     }
 
     for ev in ev_retrieve_entities.read() {
-        process_entity_update(ev, &mut ev_position_updated);
+        process_entity_update(
+            ev,
+            &mut ev_position_updated,
+            &mut ev_moon_rocks_updated,
+            &mut ev_game_updated,
+            &mut ev_game_counter_updated,
+            &mut ev_active_game_updated,
+            &mut ev_orb_bag_slot_updated,
+            &mut ev_drawn_orb_updated,
+            &mut ev_shop_inventory_updated,
+            &mut ev_purchase_history_updated,
+        );
     }
 }
 
@@ -141,6 +168,14 @@ fn fetch_initial_entities(dojo: &mut ResMut<DojoResourceV2>) {
 fn process_entity_update(
     ev: &DojoEntityUpdatedV2,
     ev_position_updated: &mut EventWriter<PositionUpdatedEvent>,
+    ev_moon_rocks_updated: &mut EventWriter<MoonRocksUpdatedEvent>,
+    ev_game_updated: &mut EventWriter<GameUpdatedEvent>,
+    ev_game_counter_updated: &mut EventWriter<GameCounterUpdatedEvent>,
+    ev_active_game_updated: &mut EventWriter<ActiveGameUpdatedEvent>,
+    ev_orb_bag_slot_updated: &mut EventWriter<OrbBagSlotUpdatedEvent>,
+    ev_drawn_orb_updated: &mut EventWriter<DrawnOrbUpdatedEvent>,
+    ev_shop_inventory_updated: &mut EventWriter<ShopInventoryUpdatedEvent>,
+    ev_purchase_history_updated: &mut EventWriter<PurchaseHistoryUpdatedEvent>,
 ) {
     info!(entity_id = ?ev.entity_id, "Torii v2 update");
 
@@ -154,6 +189,30 @@ fn process_entity_update(
         match m.name.as_str() {
             "di-Position" => {
                 ev_position_updated.write(PositionUpdatedEvent(m.into()));
+            }
+            "di-MoonRocks" => {
+                ev_moon_rocks_updated.write(MoonRocksUpdatedEvent(m.into()));
+            }
+            // "di-Game" => {
+            //     ev_game_updated.write(GameUpdatedEvent(m.into()));
+            // }
+            "di-GameCounter" => {
+                ev_game_counter_updated.write(GameCounterUpdatedEvent(m.into()));
+            }
+            "di-ActiveGame" => {
+                ev_active_game_updated.write(ActiveGameUpdatedEvent(m.into()));
+            }
+            // "di-OrbBagSlot" => {
+            //     ev_orb_bag_slot_updated.write(OrbBagSlotUpdatedEvent(m.into()));
+            // }
+            "di-DrawnOrb" => {
+                ev_drawn_orb_updated.write(DrawnOrbUpdatedEvent(m.into()));
+            }
+            "di-ShopInventory" => {
+                ev_shop_inventory_updated.write(ShopInventoryUpdatedEvent(m.into()));
+            }
+            "di-PurchaseHistory" => {
+                ev_purchase_history_updated.write(PurchaseHistoryUpdatedEvent(m.into()));
             }
             "di-Moves" => {
                 // Handle moves model if needed in the future
