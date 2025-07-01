@@ -29,6 +29,15 @@ impl Plugin for DojoV2Plugin {
                     handle_keyboard_input,
                     on_dojo_events,
                     (update_cube_position).after(on_dojo_events),
+                    process_position_update_events,
+                    process_moon_rocks_update_events,
+                    process_game_update_events,
+                    process_game_counter_update_events,
+                    process_active_game_update_events,
+                    process_orb_bag_slot_update_events,
+                    process_drawn_orb_update_events,
+                    process_shop_inventory_update_events,
+                    process_purchase_history_update_events,
                 ),
             );
     }
