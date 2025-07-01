@@ -14,7 +14,6 @@ impl Plugin for DojoV2Plugin {
         app.add_plugins(DojoPluginV2)
             .init_resource::<DojoResourceV2>()
             .init_resource::<EntityTracker>()
-            .add_event::<PositionUpdatedEvent>()
             .add_event::<MoonRocksUpdatedEvent>()
             .add_event::<GameUpdatedEvent>()
             .add_event::<GameCounterUpdatedEvent>()
@@ -28,8 +27,6 @@ impl Plugin for DojoV2Plugin {
                 (
                     handle_keyboard_input,
                     on_dojo_events,
-                    (update_cube_position).after(on_dojo_events),
-                    process_position_update_events,
                     process_moon_rocks_update_events,
                     process_game_update_events,
                     process_game_counter_update_events,

@@ -1,7 +1,7 @@
 //! UI component definitions for Dojo display system
 
-use bevy::prelude::*;
 use crate::torii::types::*;
+use bevy::prelude::*;
 
 /// Resource to hold current display data
 #[derive(Resource, Default)]
@@ -11,7 +11,6 @@ pub struct DisplayData {
     pub orb_bag_slots: Vec<OrbBagSlot>,
     pub shop_items: Vec<ShopInventory>,
     pub drawn_orbs: Vec<DrawnOrb>,
-    pub position: Option<Position>,
 }
 
 /// Component for the main UI root container

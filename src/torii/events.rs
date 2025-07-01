@@ -5,10 +5,6 @@ use bevy::prelude::*;
 
 // ==================== EVENTS ====================
 
-/// Event triggered when position is updated
-#[derive(Event)]
-pub struct PositionUpdatedEvent(pub Position);
-
 /// Event triggered when moon rocks are updated
 #[derive(Event)]
 pub struct MoonRocksUpdatedEvent(pub MoonRocks);

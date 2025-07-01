@@ -24,23 +24,6 @@ pub struct EntityTracker {
 
 // ==================== GAME TYPES ====================
 
-/// The position of the player in the game
-#[derive(Component, Debug, Clone, Copy)]
-pub struct Position {
-    pub player: Felt,
-    pub x: u32,
-    pub y: u32,
-}
-
-/// Direction enum for movement
-#[derive(Debug, Clone, Copy)]
-pub enum Direction {
-    Left = 0,
-    Right = 1,
-    Up = 2,
-    Down = 3,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MoonRocks {
     pub player: Felt,
@@ -231,12 +214,6 @@ use conversion_helpers::*;
 
 // ==================== CONVERSIONS ====================
 
-impl From<Direction> for Felt {
-    fn from(direction: Direction) -> Self {
-        Felt::from(direction as u8)
-    }
-}
-
 /// Conversion from Dojo enum to GameState
 impl From<&dojo_types::schema::Enum> for GameState {
     fn from(enum_value: &dojo_types::schema::Enum) -> Self {
@@ -295,17 +272,6 @@ impl From<&Enum> for OrbType {
             ],
             "OrbType",
         )
-    }
-}
-
-/// Conversion from Dojo struct to Position
-impl From<&Struct> for Position {
-    fn from(struct_value: &Struct) -> Self {
-        Position {
-            player: extract_player(struct_value),
-            x: extract_u32(struct_value, "x"),
-            y: extract_u32(struct_value, "y"),
-        }
     }
 }
 

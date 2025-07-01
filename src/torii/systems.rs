@@ -10,18 +10,6 @@ use dojo_bevy_plugin::{DojoEntityUpdatedV2, DojoInitializedEventV2, DojoResource
 
 use crate::torii::{constants::*, events::*, types::*};
 
-/// System for processing position updates
-pub fn process_position_update_events(mut ev_position: EventReader<PositionUpdatedEvent>) {
-    for event in ev_position.read() {
-        let position = &event.0;
-        info!(
-            "Position updated: player={:?}, x={}, y={}",
-            position.player, position.x, position.y
-        );
-        // Add your position-specific logic here
-    }
-}
-
 /// System for processing moon rocks updates
 pub fn process_moon_rocks_update_events(mut ev_moon_rocks: EventReader<MoonRocksUpdatedEvent>) {
     for event in ev_moon_rocks.read() {
@@ -132,34 +120,6 @@ pub fn process_purchase_history_update_events(
     }
 }
 
-/// System for updating cube positions based on position events
-pub fn update_cube_position(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut entity_tracker: ResMut<EntityTracker>,
-    mut ev_position_updated: EventReader<PositionUpdatedEvent>,
-    mut query: Query<(&mut Transform, &Cube)>,
-) {
-    for ev in ev_position_updated.read() {
-        let Position { x, y, player } = ev.0;
-
-        if !entity_tracker.existing_entities.contains(&player) {
-            spawn_new_cube(
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-                &mut entity_tracker,
-                player,
-                x,
-                y,
-            );
-        } else {
-            update_existing_cube(&mut query, player, x, y);
-        }
-    }
-}
-
 /// Spawn a new cube for a player
 fn spawn_new_cube(
     commands: &mut Commands,
@@ -215,18 +175,18 @@ pub fn handle_keyboard_input(
             KeyCode::KeyS if is_pressed => {
                 subscribe_to_entities(&mut dojo);
             }
-            KeyCode::ArrowLeft | KeyCode::ArrowRight | KeyCode::ArrowUp | KeyCode::ArrowDown
-                if is_pressed =>
-            {
-                let direction = match key_code {
-                    KeyCode::ArrowLeft => Direction::Left,
-                    KeyCode::ArrowRight => Direction::Right,
-                    KeyCode::ArrowUp => Direction::Up,
-                    KeyCode::ArrowDown => Direction::Down,
-                    _ => unreachable!(),
-                };
-                move_player(&mut dojo, direction);
-            }
+            // KeyCode::ArrowLeft | KeyCode::ArrowRight | KeyCode::ArrowUp | KeyCode::ArrowDown
+            //     if is_pressed =>
+            // {
+            //     let direction = match key_code {
+            //         KeyCode::ArrowLeft => Direction::Left,
+            //         KeyCode::ArrowRight => Direction::Right,
+            //         KeyCode::ArrowUp => Direction::Up,
+            //         KeyCode::ArrowDown => Direction::Down,
+            //         _ => unreachable!(),
+            //     };
+            //     move_player(&mut dojo, direction);
+            // }
             _ => continue,
         }
     }
@@ -237,7 +197,6 @@ pub fn on_dojo_events(
     mut dojo: ResMut<DojoResourceV2>,
     mut ev_initialized: EventReader<DojoInitializedEventV2>,
     mut ev_retrieve_entities: EventReader<DojoEntityUpdatedV2>,
-    mut ev_position_updated: EventWriter<PositionUpdatedEvent>,
     mut ev_moon_rocks_updated: EventWriter<MoonRocksUpdatedEvent>,
     mut ev_game_updated: EventWriter<GameUpdatedEvent>,
     mut ev_game_counter_updated: EventWriter<GameCounterUpdatedEvent>,
@@ -255,7 +214,6 @@ pub fn on_dojo_events(
     for ev in ev_retrieve_entities.read() {
         process_entity_update(
             ev,
-            &mut ev_position_updated,
             &mut ev_moon_rocks_updated,
             &mut ev_game_updated,
             &mut ev_game_counter_updated,
@@ -292,17 +250,6 @@ fn subscribe_to_entities(dojo: &mut ResMut<DojoResourceV2>) {
     dojo.subscribe_entities("position".to_string(), None);
 }
 
-/// Send move transaction to blockchain
-fn move_player(dojo: &mut ResMut<DojoResourceV2>, direction: Direction) {
-    info!("Moving player in direction: {:?}", direction);
-    let calls = vec![Call {
-        to: ACTION_ADDRESS,
-        selector: MOVE_SELECTOR,
-        calldata: vec![direction.into()],
-    }];
-    dojo.queue_tx(calls);
-}
-
 /// Fetch initial entities from blockchain
 fn fetch_initial_entities(dojo: &mut ResMut<DojoResourceV2>) {
     dojo.queue_retrieve_entities(ToriiQuery {
@@ -322,7 +269,6 @@ fn fetch_initial_entities(dojo: &mut ResMut<DojoResourceV2>) {
 /// Process entity updates from blockchain
 fn process_entity_update(
     ev: &DojoEntityUpdatedV2,
-    ev_position_updated: &mut EventWriter<PositionUpdatedEvent>,
     ev_moon_rocks_updated: &mut EventWriter<MoonRocksUpdatedEvent>,
     ev_game_updated: &mut EventWriter<GameUpdatedEvent>,
     ev_game_counter_updated: &mut EventWriter<GameCounterUpdatedEvent>,
@@ -342,9 +288,6 @@ fn process_entity_update(
         debug!("Processing model: {:?}", &m);
 
         match m.name.as_str() {
-            "di-Position" => {
-                ev_position_updated.write(PositionUpdatedEvent(m.into()));
-            }
             "di-MoonRocks" => {
                 ev_moon_rocks_updated.write(MoonRocksUpdatedEvent(m.into()));
             }

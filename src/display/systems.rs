@@ -1,9 +1,9 @@
 //! UI update systems that react to torii events using modern Bevy 0.16 syntax
 
-use bevy::prelude::*;
+use super::components::*;
 use crate::torii::events::*;
 use crate::torii::types::*;
-use super::components::*;
+use bevy::prelude::*;
 
 /// Setup the initial display UI
 pub fn setup_display_ui(mut commands: Commands) {
@@ -23,7 +23,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         HealthDisplay,
     ));
-    
+
     // Moon Rocks Display
     commands.spawn((
         Text::new("Moon Rocks: 0"),
@@ -40,7 +40,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         MoonRocksDisplay,
     ));
-    
+
     // Position Display
     commands.spawn((
         Text::new("Position: (0, 0)"),
@@ -57,7 +57,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         PositionDisplay,
     ));
-    
+
     // Game State Display
     commands.spawn((
         Text::new("Game State: Inactive"),
@@ -74,7 +74,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         GameStateDisplay,
     ));
-    
+
     // Orb Bag Panel Header
     commands.spawn((
         Text::new("Orb Bag Slots:"),
@@ -91,7 +91,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         OrbBagPanel,
     ));
-    
+
     // Shop Panel Header
     commands.spawn((
         Text::new("Shop Items:"),
@@ -108,7 +108,7 @@ pub fn setup_display_ui(mut commands: Commands) {
         },
         ShopPanel,
     ));
-    
+
     // Drawn Orbs Panel Header
     commands.spawn((
         Text::new("Recent Drawn Orbs:"),
@@ -136,7 +136,7 @@ pub fn update_game_stats_display(
     for event in events.read() {
         display_data.current_game = Some(event.0.clone());
         let game = &event.0;
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!(
                 "Health: {} | Points: {} | Multiplier: {}x | Level: {} | Cheddah: {}",
@@ -154,24 +154,9 @@ pub fn update_moon_rocks_display(
 ) {
     for event in events.read() {
         display_data.moon_rocks = Some(event.0.clone());
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Moon Rocks: {}", event.0.amount));
-        }
-    }
-}
-
-/// Update position display
-pub fn update_position_display(
-    mut events: EventReader<PositionUpdatedEvent>,
-    mut display_data: ResMut<DisplayData>,
-    mut query: Query<&mut Text, With<PositionDisplay>>,
-) {
-    for event in events.read() {
-        display_data.position = Some(event.0);
-        
-        for mut text in query.iter_mut() {
-            *text = Text::new(format!("Position: ({}, {})", event.0.x, event.0.y));
         }
     }
 }
@@ -188,7 +173,7 @@ pub fn update_game_state_display(
             GameState::GameWon => "Game Won",
             GameState::GameLost => "Game Lost",
         };
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Game State: {}", state_text));
         }
@@ -204,14 +189,18 @@ pub fn update_orb_bag_display(
 ) {
     for event in events.read() {
         let slot = event.0.clone();
-        
+
         // Update the display data
-        if let Some(existing_slot) = display_data.orb_bag_slots.iter_mut().find(|s| s.slot_index == slot.slot_index) {
+        if let Some(existing_slot) = display_data
+            .orb_bag_slots
+            .iter_mut()
+            .find(|s| s.slot_index == slot.slot_index)
+        {
             *existing_slot = slot.clone();
         } else {
             display_data.orb_bag_slots.push(slot.clone());
         }
-        
+
         // Add text display for this slot (simplified approach)
         let y_offset = 170.0 + (slot.slot_index as f32 * 25.0);
         commands.spawn((
@@ -247,14 +236,18 @@ pub fn update_shop_display(
 ) {
     for event in events.read() {
         let item = event.0.clone();
-        
+
         // Update the display data
-        if let Some(existing_item) = display_data.shop_items.iter_mut().find(|i| i.slot_index == item.slot_index) {
+        if let Some(existing_item) = display_data
+            .shop_items
+            .iter_mut()
+            .find(|i| i.slot_index == item.slot_index)
+        {
             *existing_item = item.clone();
         } else {
             display_data.shop_items.push(item.clone());
         }
-        
+
         // Add text display for this shop item
         let y_offset = 330.0 + (item.slot_index as f32 * 25.0);
         commands.spawn((
@@ -292,12 +285,12 @@ pub fn update_drawn_orbs_display(
     for event in events.read() {
         let drawn_orb = event.0.clone();
         display_data.drawn_orbs.push(drawn_orb.clone());
-        
+
         // Keep only the last 10 drawn orbs for display
         if display_data.drawn_orbs.len() > 10 {
             display_data.drawn_orbs.remove(0);
         }
-        
+
         // Add text display for this drawn orb
         let orb_count = display_data.drawn_orbs.len();
         let y_offset = 530.0 + ((orb_count - 1) as f32 * 20.0);
@@ -330,7 +323,7 @@ pub fn update_game_counter_display(
 ) {
     for event in events.read() {
         let counter = &event.0;
-        
+
         commands.spawn((
             Text::new(format!("Next Game ID: {}", counter.next_game_id)),
             TextFont {
@@ -355,7 +348,7 @@ pub fn update_active_game_display(
 ) {
     for event in events.read() {
         let active_game = &event.0;
-        
+
         commands.spawn((
             Text::new(format!("Active Game: {}", active_game.game_id)),
             TextFont {

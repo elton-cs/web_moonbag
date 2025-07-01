@@ -1,15 +1,14 @@
 //! Simplified Dojo Display module for rendering blockchain game data in UI
 
-use bevy::prelude::*;
 use crate::torii::events::*;
 use crate::torii::types::*;
+use bevy::prelude::*;
 
 /// Resource to hold current display data
 #[derive(Resource, Default)]
 pub struct DisplayData {
     pub current_game: Option<Game>,
     pub moon_rocks: Option<MoonRocks>,
-    pub position: Option<Position>,
 }
 
 /// Component for text displays
@@ -30,18 +29,11 @@ impl Plugin for DojoDisplayPlugin {
             // Register events
             .add_event::<GameUpdatedEvent>()
             .add_event::<MoonRocksUpdatedEvent>()
-            .add_event::<PositionUpdatedEvent>()
-            
             // Initialize resources
             .init_resource::<DisplayData>()
-            
             // Setup systems
             .add_systems(Startup, setup_simple_ui)
-            .add_systems(Update, (
-                update_game_stats_simple,
-                update_moon_rocks_simple,
-                update_position_simple,
-            ));
+            .add_systems(Update, (update_game_stats_simple, update_moon_rocks_simple));
     }
 }
 
@@ -63,7 +55,7 @@ fn setup_simple_ui(mut commands: Commands) {
         },
         GameStatsText,
     ));
-    
+
     commands.spawn((
         Text::new("Moon Rocks: 0"),
         TextFont {
@@ -79,7 +71,7 @@ fn setup_simple_ui(mut commands: Commands) {
         },
         MoonRocksText,
     ));
-    
+
     commands.spawn((
         Text::new("Position: (0, 0)"),
         TextFont {
@@ -106,7 +98,7 @@ fn update_game_stats_simple(
     for event in events.read() {
         display_data.current_game = Some(event.0.clone());
         let game = &event.0;
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!(
                 "Health: {} | Points: {} | Level: {}",
@@ -124,24 +116,9 @@ fn update_moon_rocks_simple(
 ) {
     for event in events.read() {
         display_data.moon_rocks = Some(event.0.clone());
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Moon Rocks: {}", event.0.amount));
-        }
-    }
-}
-
-/// Update position display
-fn update_position_simple(
-    mut events: EventReader<PositionUpdatedEvent>,
-    mut display_data: ResMut<DisplayData>,
-    mut query: Query<&mut Text, With<PositionText>>,
-) {
-    for event in events.read() {
-        display_data.position = Some(event.0);
-        
-        for mut text in query.iter_mut() {
-            *text = Text::new(format!("Position: ({}, {})", event.0.x, event.0.y));
         }
     }
 }
