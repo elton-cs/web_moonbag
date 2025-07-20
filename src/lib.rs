@@ -1,7 +1,6 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
-mod torii;
 mod display;
-mod display_simple;
+mod torii;
 
 pub struct AppPlugin;
 impl Plugin for AppPlugin {

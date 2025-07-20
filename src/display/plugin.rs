@@ -2,8 +2,8 @@
 
 use bevy::prelude::*;
 
-use crate::torii::events::*;
 use super::{components::*, systems::*};
+use crate::torii::events::*;
 
 pub struct DojoDisplayPlugin;
 
@@ -21,26 +21,26 @@ impl Plugin for DojoDisplayPlugin {
             .add_event::<ShopInventoryUpdatedEvent>()
             .add_event::<PurchaseHistoryUpdatedEvent>()
             .add_event::<DrawnOrbAddedEvent>()
-            
             // Initialize resources
             .init_resource::<DisplayData>()
-            
             // Setup systems
             .add_systems(Startup, setup_display_ui)
-            .add_systems(Update, (
-                // Core display updates
-                update_game_stats_display,
-                update_moon_rocks_display,
-                update_position_display,
-                update_game_state_display,
-                update_game_counter_display,
-                update_active_game_display,
-                
-                // Game object updates
-                update_orb_bag_display,
-                update_shop_display,
-                update_drawn_orbs_display,
-                update_purchase_history_display,
-            ));
+            .add_systems(
+                Update,
+                (
+                    // Core display updates
+                    update_game_stats_display,
+                    update_moon_rocks_display,
+                    update_position_display,
+                    update_game_state_display,
+                    update_game_counter_display,
+                    update_active_game_display,
+                    // Game object updates
+                    update_orb_bag_display,
+                    update_shop_display,
+                    update_drawn_orbs_display,
+                    update_purchase_history_display,
+                ),
+            );
     }
 }

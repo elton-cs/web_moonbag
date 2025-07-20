@@ -1,7 +1,7 @@
 //! UI component definitions for comprehensive Dojo event display system
 
-use bevy::prelude::*;
 use crate::torii::types::*;
+use bevy::prelude::*;
 use std::collections::VecDeque;
 
 /// Resource to hold current display data and event history
@@ -16,7 +16,7 @@ pub struct DisplayData {
     pub shop_items: Vec<ShopInventory>,
     pub drawn_orbs: Vec<DrawnOrb>,
     pub purchase_history: Vec<PurchaseHistory>,
-    
+
     // Event logs for real-time display
     pub recent_events: VecDeque<EventLogEntry>,
 }

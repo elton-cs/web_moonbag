@@ -1,10 +1,10 @@
 //! Simple UI update systems for displaying all Torii events using modern Bevy 0.16 syntax
 
-use bevy::prelude::*;
-use crate::torii::events::*;
-use crate::torii::types::*;
 use super::components::*;
 use super::styles::*;
+use crate::torii::events::*;
+use crate::torii::types::*;
+use bevy::prelude::*;
 
 /// Setup the simple event data view UI
 pub fn setup_display_ui(mut commands: Commands) {
@@ -357,33 +357,78 @@ pub fn setup_display_ui(mut commands: Commands) {
 pub fn update_game_stats_display(
     mut events: EventReader<GameUpdatedEvent>,
     mut display_data: ResMut<DisplayData>,
-    mut health_query: Query<&mut Text, (With<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
-    mut points_query: Query<&mut Text, (With<PointsDisplay>, Without<HealthDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
-    mut level_query: Query<&mut Text, (With<LevelDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<MultiplierDisplay>, Without<CheddahDisplay>)>,
-    mut multiplier_query: Query<&mut Text, (With<MultiplierDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<CheddahDisplay>)>,
-    mut cheddah_query: Query<&mut Text, (With<CheddahDisplay>, Without<HealthDisplay>, Without<PointsDisplay>, Without<LevelDisplay>, Without<MultiplierDisplay>)>,
+    mut health_query: Query<
+        &mut Text,
+        (
+            With<HealthDisplay>,
+            Without<PointsDisplay>,
+            Without<LevelDisplay>,
+            Without<MultiplierDisplay>,
+            Without<CheddahDisplay>,
+        ),
+    >,
+    mut points_query: Query<
+        &mut Text,
+        (
+            With<PointsDisplay>,
+            Without<HealthDisplay>,
+            Without<LevelDisplay>,
+            Without<MultiplierDisplay>,
+            Without<CheddahDisplay>,
+        ),
+    >,
+    mut level_query: Query<
+        &mut Text,
+        (
+            With<LevelDisplay>,
+            Without<HealthDisplay>,
+            Without<PointsDisplay>,
+            Without<MultiplierDisplay>,
+            Without<CheddahDisplay>,
+        ),
+    >,
+    mut multiplier_query: Query<
+        &mut Text,
+        (
+            With<MultiplierDisplay>,
+            Without<HealthDisplay>,
+            Without<PointsDisplay>,
+            Without<LevelDisplay>,
+            Without<CheddahDisplay>,
+        ),
+    >,
+    mut cheddah_query: Query<
+        &mut Text,
+        (
+            With<CheddahDisplay>,
+            Without<HealthDisplay>,
+            Without<PointsDisplay>,
+            Without<LevelDisplay>,
+            Without<MultiplierDisplay>,
+        ),
+    >,
 ) {
     for event in events.read() {
         display_data.current_game = Some(event.0.clone());
         let game = &event.0;
-        
+
         // Update individual displays
         for mut text in health_query.iter_mut() {
             *text = Text::new(format!("Health: {}", game.health));
         }
-        
+
         for mut text in points_query.iter_mut() {
             *text = Text::new(format!("Points: {}", game.points));
         }
-        
+
         for mut text in level_query.iter_mut() {
             *text = Text::new(format!("Level: {}", game.current_level));
         }
-        
+
         for mut text in multiplier_query.iter_mut() {
             *text = Text::new(format!("Multiplier: {}x", game.multiplier));
         }
-        
+
         for mut text in cheddah_query.iter_mut() {
             *text = Text::new(format!("Cheddah: {}", game.cheddah));
         }
@@ -398,7 +443,7 @@ pub fn update_moon_rocks_display(
 ) {
     for event in events.read() {
         display_data.moon_rocks = Some(event.0.clone());
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Moon Rocks: {}", event.0.amount));
         }
@@ -413,7 +458,7 @@ pub fn update_position_display(
 ) {
     for event in events.read() {
         display_data.position = Some(event.0);
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Position: ({}, {})", event.0.x, event.0.y));
         }
@@ -432,7 +477,7 @@ pub fn update_game_state_display(
             GameState::GameWon => "Game Won",
             GameState::GameLost => "Game Lost",
         };
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Game State: {}", state_text));
         }
@@ -447,7 +492,7 @@ pub fn update_game_counter_display(
 ) {
     for event in events.read() {
         display_data.game_counter = Some(event.0.clone());
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Next Game ID: {}", event.0.next_game_id));
         }
@@ -462,7 +507,7 @@ pub fn update_active_game_display(
 ) {
     for event in events.read() {
         display_data.active_game = Some(event.0.clone());
-        
+
         for mut text in query.iter_mut() {
             *text = Text::new(format!("Active Game: {}", event.0.game_id));
         }
@@ -477,24 +522,31 @@ pub fn update_orb_bag_display(
 ) {
     for event in events.read() {
         let slot = event.0.clone();
-        
+
         // Update the display data
-        if let Some(existing_slot) = display_data.orb_bag_slots.iter_mut().find(|s| s.slot_index == slot.slot_index) {
+        if let Some(existing_slot) = display_data
+            .orb_bag_slots
+            .iter_mut()
+            .find(|s| s.slot_index == slot.slot_index)
+        {
             *existing_slot = slot.clone();
         } else {
             display_data.orb_bag_slots.push(slot.clone());
         }
-        
+
         // Update summary display
-        let active_slots: Vec<_> = display_data.orb_bag_slots.iter()
+        let active_slots: Vec<_> = display_data
+            .orb_bag_slots
+            .iter()
             .filter(|s| s.is_active)
             .collect();
-            
+
         for mut text in query.iter_mut() {
             if active_slots.is_empty() {
                 *text = Text::new("Orb Bag Slots: (empty)".to_string());
             } else {
-                let slot_summaries: Vec<String> = active_slots.iter()
+                let slot_summaries: Vec<String> = active_slots
+                    .iter()
                     .map(|s| format!("{}: {}", s.slot_index, format_orb_type(&s.orb_type)))
                     .collect();
                 *text = Text::new(format!("Orb Bag Slots: {}", slot_summaries.join(", ")));
@@ -511,25 +563,35 @@ pub fn update_shop_display(
 ) {
     for event in events.read() {
         let item = event.0.clone();
-        
+
         // Update the display data
-        if let Some(existing_item) = display_data.shop_items.iter_mut().find(|i| i.slot_index == item.slot_index) {
+        if let Some(existing_item) = display_data
+            .shop_items
+            .iter_mut()
+            .find(|i| i.slot_index == item.slot_index)
+        {
             *existing_item = item.clone();
         } else {
             display_data.shop_items.push(item.clone());
         }
-        
+
         // Update summary display
         for mut text in query.iter_mut() {
             if display_data.shop_items.is_empty() {
                 *text = Text::new("Shop Items: (empty)".to_string());
             } else {
-                let item_summaries: Vec<String> = display_data.shop_items.iter()
+                let item_summaries: Vec<String> = display_data
+                    .shop_items
+                    .iter()
                     .take(3) // Show only first 3 items
                     .map(|i| format!("{} ({})", format_orb_type(&i.orb_type), i.base_price))
                     .collect();
                 let summary = if display_data.shop_items.len() > 3 {
-                    format!("Shop Items: {} (+{} more)", item_summaries.join(", "), display_data.shop_items.len() - 3)
+                    format!(
+                        "Shop Items: {} (+{} more)",
+                        item_summaries.join(", "),
+                        display_data.shop_items.len() - 3
+                    )
                 } else {
                     format!("Shop Items: {}", item_summaries.join(", "))
                 };
@@ -548,24 +610,30 @@ pub fn update_drawn_orbs_display(
     for event in events.read() {
         let drawn_orb = event.0.clone();
         display_data.drawn_orbs.push(drawn_orb.clone());
-        
+
         // Keep only the last 10 drawn orbs for display
         if display_data.drawn_orbs.len() > 10 {
             display_data.drawn_orbs.remove(0);
         }
-        
+
         // Update summary display
         for mut text in query.iter_mut() {
             if display_data.drawn_orbs.is_empty() {
                 *text = Text::new("Recent Drawn Orbs: (empty)".to_string());
             } else {
-                let recent_orbs: Vec<String> = display_data.drawn_orbs.iter()
+                let recent_orbs: Vec<String> = display_data
+                    .drawn_orbs
+                    .iter()
                     .rev()
                     .take(3) // Show last 3 orbs
                     .map(|o| format_orb_type(&o.orb_type).to_string())
                     .collect();
                 let summary = if display_data.drawn_orbs.len() > 3 {
-                    format!("Recent Drawn Orbs: {} (+{} more)", recent_orbs.join(", "), display_data.drawn_orbs.len() - 3)
+                    format!(
+                        "Recent Drawn Orbs: {} (+{} more)",
+                        recent_orbs.join(", "),
+                        display_data.drawn_orbs.len() - 3
+                    )
                 } else {
                     format!("Recent Drawn Orbs: {}", recent_orbs.join(", "))
                 };
@@ -584,19 +652,25 @@ pub fn update_purchase_history_display(
     for event in events.read() {
         let history = event.0.clone();
         display_data.purchase_history.push(history.clone());
-        
+
         // Update summary display
         for mut text in query.iter_mut() {
             if display_data.purchase_history.is_empty() {
                 *text = Text::new("Purchase History: (empty)".to_string());
             } else {
-                let recent_purchases: Vec<String> = display_data.purchase_history.iter()
+                let recent_purchases: Vec<String> = display_data
+                    .purchase_history
+                    .iter()
                     .rev()
                     .take(3) // Show last 3 purchases
                     .map(|p| format!("{} x{}", format_orb_type(&p.orb_type), p.purchase_count))
                     .collect();
                 let summary = if display_data.purchase_history.len() > 3 {
-                    format!("Purchase History: {} (+{} more)", recent_purchases.join(", "), display_data.purchase_history.len() - 3)
+                    format!(
+                        "Purchase History: {} (+{} more)",
+                        recent_purchases.join(", "),
+                        display_data.purchase_history.len() - 3
+                    )
                 } else {
                     format!("Purchase History: {}", recent_purchases.join(", "))
                 };
